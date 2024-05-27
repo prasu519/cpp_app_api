@@ -1,0 +1,68 @@
+const {
+  feedingService,
+  feedingServiceRead,
+  feedingServiceUpdate,
+} = require("./feeding.service");
+
+module.exports = {
+  feedingController: async (req, res) => {
+    const body = req.body;
+    feedingService(body, (error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+    /* try {
+      const body = req.body;
+      const addFeeding = new Feeding(body);
+      await addFeeding.save();
+      res
+        .status(200)
+        .json({ message: "Posted Feeding successfully", feeding: addFeeding });
+    } catch (error) {
+      console.log("Error posting feeding data", error);
+      res.status(500).json({ message: "Failed to post Fedding data" });
+    }*/
+  },
+
+  feedingControllerRead: (req, res) => {
+    const date = req.query.date;
+    const shift = req.query.shift;
+
+    feedingServiceRead(date, shift, (error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
+
+  feedingControllerUpdate: (req, res) => {
+    const data = req.body;
+    feedingServiceUpdate(data, (error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
+};
