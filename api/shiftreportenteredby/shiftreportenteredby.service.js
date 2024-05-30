@@ -7,7 +7,6 @@ module.exports = {
       await addShiftReportEnteredBy.save();
       return callback(null, addShiftReportEnteredBy);
     } catch (error) {
-      console.log("Error posting ShiftReportEnteredBy data", error);
       return callback(error);
     }
   },
@@ -19,12 +18,6 @@ module.exports = {
       });
       return callback(null, getShiftReportEnteredBy);
     } catch (error) {
-      console.log(
-        "getShiftReportEnteredBy Record not found for date: " +
-          date +
-          "shift: " +
-          shift
-      );
       return callback(error);
     }
   },

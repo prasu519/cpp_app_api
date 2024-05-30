@@ -3,13 +3,10 @@ const {
   mbtopstockServiceRead,
   mbtopstockServiceUpdate,
 } = require("./mbtopstock.service");
-const { genSaltSync, hashSync } = require("bcrypt");
 
 module.exports = {
   mbtopstockController: (req, res) => {
     const body = req.body;
-    // const salt = genSaltSync(10);
-    //body.password = hashSync(body.password, salt);
 
     mbtopstockService(body, (err, results) => {
       if (err) {

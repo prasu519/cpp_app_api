@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 
@@ -10,18 +11,17 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+const MONGO_URL = process.env.URL;
 mongoose
-  .connect(
-    "mongodb+srv://chengalaprasanna:04131Aa0519@cluster0.fzce8q3.mongodb.net/"
-  )
+  .connect(MONGO_URL)
   .then(() => {
     console.log("Connected to mongodb");
   })
   .catch((error) => {
     console.log("Error Connecting to mongodb: " + error);
   });
-
-app.listen(3000, () => {
+const PORT = process.env.PORT;
+app.listen(PORT, () => {
   console.log("Server up and running");
 });
 
