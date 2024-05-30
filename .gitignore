@@ -2,8 +2,9 @@
 
 # dependencies
 node_modules/
-.env
 
+# Environment variables
+.env
 
 # debug
 npm-debug.*
