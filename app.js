@@ -25,6 +25,12 @@ app.listen(PORT, () => {
   console.log("Server up and running");
 });
 
+app.get("/", (req, res) => {
+  res.status(200).send({
+    success: true,
+    msg: "Node Server Running",
+  });
+});
 const blendRouter = require("./api/blend/blend.router");
 app.use("/api/blend", blendRouter);
 
