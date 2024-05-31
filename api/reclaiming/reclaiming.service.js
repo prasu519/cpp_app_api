@@ -1,4 +1,4 @@
-const Reclaiming = require("../models/reclaimingModel");
+const Reclaiming = require("../models/ReclaimingModel");
 
 module.exports = {
   reclaimingService: async (data, callback) => {
