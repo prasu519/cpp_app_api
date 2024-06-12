@@ -9,6 +9,10 @@ const blendSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  empnum: {
+    type: Number,
+    required: true,
+  },
   total: {
     type: Number,
   },
