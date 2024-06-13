@@ -65,6 +65,6 @@ const blendSchema = mongoose.Schema({
     type: Number,
   },
 });
-blendSchema.index({ date: 1, shift: 1 }, { unique: true });
+blendSchema.index({ _id: 1, date: 1, shift: 1 }, { unique: true });
 const Blend = mongoose.model("Blend", blendSchema);
 module.exports = Blend;

@@ -12,13 +12,18 @@ module.exports = {
   },
 
   blendServiceGet: async (date, shift, callback) => {
-    const endDate = date; // + "T23:59:59.999+00:00";
+    console.log(date);
+    const endDate = date + "T00:00:00.000+00:00"; //"T23:59:59.999+00:00";
     try {
-      const getBlend = await Blend.find({ date: { $lte: endDate } })
-        .sort({ date: -1 })
+      const getBlend = await Blend.find({
+        $and: [{ date: { $lte: endDate } }, { shift: shift }],
+      })
+        .sort({ _id: -1 })
         .limit(1);
+      console.log(getBlend);
       return callback(null, getBlend);
     } catch (error) {
+      console.log(error);
       return callback(error);
     }
   },
