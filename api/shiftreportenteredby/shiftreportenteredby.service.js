@@ -16,6 +16,7 @@ module.exports = {
         date: date,
         shift: shift,
       });
+      console.log(getShiftReportEnteredBy);
       return callback(null, getShiftReportEnteredBy);
     } catch (error) {
       return callback(error);

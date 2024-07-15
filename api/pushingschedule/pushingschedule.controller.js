@@ -2,6 +2,7 @@ const {
   pushingScheduleService,
   pushingScheduleServiceRead,
   pushingScheduleServiceUpdate,
+  pushingScheduleServiceReadDaywise,
 } = require("../pushingschedule/pushingschedule.service");
 
 module.exports = {
@@ -26,6 +27,23 @@ module.exports = {
     const shift = req.query.shift;
 
     pushingScheduleServiceRead(date, shift, (error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
+
+  pushingScheduleControllerReadDaywise: (req, res) => {
+    const date = req.query.date;
+
+    pushingScheduleServiceReadDaywise(date, (error, results) => {
       if (error) {
         return res.status(500).json({
           success: 0,

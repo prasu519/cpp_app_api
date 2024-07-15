@@ -57,6 +57,54 @@ const reclaimingSchema = mongoose.Schema({
   coal8recl: {
     type: Number,
   },
+  excoal1name: {
+    type: String,
+  },
+  excoal1recl: {
+    type: Number,
+  },
+  excoal2name: {
+    type: String,
+  },
+  excoal2recl: {
+    type: Number,
+  },
+  excoal3name: {
+    type: String,
+  },
+  excoal3recl: {
+    type: Number,
+  },
+  excoal4name: {
+    type: String,
+  },
+  excoal4recl: {
+    type: Number,
+  },
+  excoal5name: {
+    type: String,
+  },
+  excoal5recl: {
+    type: Number,
+  },
+  excoal6name: {
+    type: String,
+  },
+  excoal6recl: {
+    type: Number,
+  },
+  excoal7name: {
+    type: String,
+  },
+  excoal7recl: {
+    type: Number,
+  },
+  excoal8name: {
+    type: String,
+  },
+  excoal8recl: {
+    type: Number,
+  },
   cc49recl: {
     type: Number,
   },

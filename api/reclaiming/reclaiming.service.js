@@ -20,6 +20,15 @@ module.exports = {
     }
   },
 
+  reclaimingServiceReadDaywise: async (date, callback) => {
+    try {
+      const getReclaimingdaywise = await Reclaiming.find({ date: date });
+      return callback(null, getReclaimingdaywise);
+    } catch (error) {
+      return callback(error);
+    }
+  },
+
   reclaimingServiceUpdate: async (data, callBack) => {
     try {
       const updateReclaiming = await Reclaiming.updateOne(

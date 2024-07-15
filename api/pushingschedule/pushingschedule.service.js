@@ -23,6 +23,18 @@ module.exports = {
     }
   },
 
+  pushingScheduleServiceReadDaywise: async (date, callback) => {
+    try {
+      const getPushingScheduleDaywise = await PushingSchedule.find({
+        date: date,
+      });
+
+      return callback(null, getPushingScheduleDaywise);
+    } catch (error) {
+      return callback(error);
+    }
+  },
+
   pushingScheduleServiceUpdate: async (data, callBack) => {
     try {
       const updatePushingSchedule = await PushingSchedule.updateOne(

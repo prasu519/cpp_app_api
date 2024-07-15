@@ -11,20 +11,161 @@ module.exports = {
     }
   },
 
-  blendServiceGet: async (date, shift, callback) => {
-    console.log(date);
-    const endDate = date + "T00:00:00.000+00:00"; //"T23:59:59.999+00:00";
-    try {
-      const getBlend = await Blend.find({
-        $and: [{ date: { $lte: endDate } }, { shift: shift }],
-      })
-        .sort({ _id: -1 })
-        .limit(1);
-      console.log(getBlend);
-      return callback(null, getBlend);
-    } catch (error) {
-      console.log(error);
-      return callback(error);
+  blendServiceGet: async (selectedDate, selectedShift, callback) => {
+    const formatedDate = selectedDate + "T00:00:00.000+00:00"; //"T23:59:59.999+00:00";
+
+    if (selectedShift === "B" || selectedShift === "C") {
+      try {
+        // Step 1: Find the maximum date less than or equal to selectedDate
+        let maxDateResult = await Blend.find({ date: { $lte: formatedDate } })
+          .sort({ date: -1 })
+          .limit(1)
+          .exec();
+        let maxDate = maxDateResult.length > 0 ? maxDateResult[0].date : null;
+
+        // Step 2: Find the maximum shift for that date less than or equal to selectedShift
+        let maxShift = null;
+        if (maxDate) {
+          let maxShiftResult = await Blend.find({
+            date: maxDate,
+            shift: { $lte: selectedShift },
+          })
+            .sort({ Shift: -1, _id: -1 })
+            .limit(1)
+            .exec();
+          maxShift = maxShiftResult.length > 0 ? maxShiftResult[0].shift : null;
+          let fMaxDate = new Date(maxDate).toISOString().split("T")[0];
+
+          if (maxShift === null) {
+            if (fMaxDate === selectedDate) {
+              // Step 2.1: Find the maximum date less than or equal to selectedDate
+              maxDateResult = await Blend.find({
+                date: { $lt: formatedDate },
+              })
+                .sort({ date: -1 })
+                .limit(1)
+                .exec();
+              maxDate = maxDateResult.length > 0 ? maxDateResult[0].date : null;
+
+              // Step 2.2: Find the maximum shift for that date less than or equal to selectedShift
+              maxShift = null;
+              if (maxDate) {
+                maxShiftResult = await Blend.find({
+                  date: maxDate,
+                  shift: { $lte: selectedShift },
+                })
+                  .sort({ Shift: -1, _id: -1 })
+                  .limit(1)
+                  .exec();
+                maxShift =
+                  maxShiftResult.length > 0 ? maxShiftResult[0].shift : null;
+
+                if (maxShift === null) {
+                  maxShiftResult = await Blend.find({
+                    date: maxDate,
+                    shift: { $gte: selectedShift },
+                  })
+                    .sort({ Shift: -1, _id: -1 })
+                    .limit(1)
+                    .exec();
+                  maxShift =
+                    maxShiftResult.length > 0 ? maxShiftResult[0].shift : null;
+                }
+              }
+            } else {
+              maxShiftResult = await Blend.find({
+                date: maxDate,
+                shift: { $gte: selectedShift },
+              })
+                .sort({ Shift: -1, _id: -1 })
+                .limit(1)
+                .exec();
+              maxShift =
+                maxShiftResult.length > 0 ? maxShiftResult[0].shift : null;
+            }
+          }
+        }
+        // Step 3: Query the documents with the maximum date and shift
+        let getBlend = [];
+        if (maxDate && maxShift !== null) {
+          getBlend = await Blend.find({
+            date: maxDate,
+            shift: maxShift,
+          })
+            .sort({ _id: -1 })
+            .limit(1)
+            .exec();
+        }
+
+        return callback(null, getBlend);
+      } catch (error) {
+        console.log(error);
+        return callback(error);
+      }
+    } else {
+      try {
+        // Step 1: Find the maximum date less than or equal to selectedDate
+        let maxDateResult = await Blend.find({ date: { $lte: formatedDate } })
+          .sort({ date: -1 })
+          .limit(1)
+          .exec();
+        let maxDate = maxDateResult.length > 0 ? maxDateResult[0].date : null;
+
+        // Step 2: Find the maximum shift for that date less than or equal to selectedShift
+        let maxShift = null;
+        if (maxDate) {
+          let maxShiftResult = await Blend.find({
+            date: maxDate,
+            shift: "A",
+          })
+            .sort({ _id: -1 })
+            .limit(1)
+            .exec();
+          maxShift = maxShiftResult.length > 0 ? maxShiftResult[0].shift : null;
+
+          if (maxShift === null) {
+            // Step 1: Find the maximum date less than or equal to selectedDate
+            maxDateResult = await Blend.find({
+              date: { $lt: formatedDate },
+            })
+              .sort({ date: -1 })
+              .limit(1)
+              .exec();
+            maxDate = maxDateResult.length > 0 ? maxDateResult[0].date : null;
+
+            // Step 2: Find the maximum shift for that date less than or equal to selectedShift
+            maxShift = null;
+            if (maxDate) {
+              maxShiftResult = await Blend.find({
+                date: maxDate,
+                shift: { $gte: selectedShift },
+              })
+                .sort({ Shift: -1, _id: -1 })
+                .limit(1)
+                .exec();
+              maxShift =
+                maxShiftResult.length > 0 ? maxShiftResult[0].shift : null;
+            }
+          }
+
+          // Step 3: Query the documents with the maximum date and shift
+
+          if (maxDate && maxShift !== null) {
+            getBlend = await Blend.find({
+              date: maxDate,
+              shift: maxShift,
+            })
+              .sort({ _id: -1 })
+              .limit(1)
+              .exec();
+          }
+        }
+
+        return callback(null, getBlend);
+      } catch (error) {
+        console.log(error);
+        return callback(error);
+      }
     }
   },
 };

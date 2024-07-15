@@ -20,6 +20,15 @@ module.exports = {
     }
   },
 
+  feedingServiceReadDaywise: async (date, callback) => {
+    try {
+      const getFeedingdaywise = await Feeding.find({ date: date });
+      return callback(null, getFeedingdaywise);
+    } catch (error) {
+      return callback(error);
+    }
+  },
+
   feedingServiceUpdate: async (data, callBack) => {
     try {
       const updateFeeding = await Feeding.updateOne(

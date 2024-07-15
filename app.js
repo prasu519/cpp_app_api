@@ -37,8 +37,14 @@ app.use("/api/blend", blendRouter);
 const reclaimingRouter = require("./api/reclaiming/reclaiming.router");
 app.use("/api/reclaiming", reclaimingRouter);
 
+const reclaimingRouterDaywise = require("./api/reclaiming/reclaiming.router.daywise");
+app.use("/api/reclaiming/daywise", reclaimingRouterDaywise);
+
 const feedingRouter = require("./api/feeding/feeding.router");
 app.use("/api/feeding", feedingRouter);
+
+const feedingRouterDaywise = require("./api/feeding/feeding.router.daywise");
+app.use("/api/feeding/daywise", feedingRouterDaywise);
 
 const runningHoursRouter = require("./api/runninghours/runninghours.router");
 app.use("/api/runningHours", runningHoursRouter);
@@ -57,6 +63,9 @@ app.use("/api/coalAnalysis", coalAnalysisRouter);
 
 const pushingScheduleRouter = require("./api/pushingschedule/pushingschedule.router");
 app.use("/api/pushings", pushingScheduleRouter);
+
+const pushingScheduleRouterDaywise = require("./api/pushingschedule/pushingschedule.router.daywise");
+app.use("/api/pushings/daywise", pushingScheduleRouterDaywise);
 
 const employeDetailsRouter = require("./api/employedetails/employedetails.router");
 app.use("/api/employedetails", employeDetailsRouter);
