@@ -1,4 +1,8 @@
-const { blendServicePost, blendServiceGet } = require("../blend/blend.service");
+const {
+  blendServicePost,
+  blendServiceGet,
+  blendServiceGetDatewise,
+} = require("../blend/blend.service");
 
 module.exports = {
   blendControllerPost: (req, res) => {
@@ -32,5 +36,25 @@ module.exports = {
         data: results,
       });
     });
+  },
+  blendControllerGetDatewise: (req, res) => {
+    const selectedFromDate = req.query.fromdate;
+    const selectedToDate = req.query.todate;
+    blendServiceGetDatewise(
+      selectedFromDate,
+      selectedToDate,
+      (error, results) => {
+        if (error) {
+          return res.status(500).json({
+            success: 0,
+            message: error,
+          });
+        }
+        return res.status(200).json({
+          success: 1,
+          data: results,
+        });
+      }
+    );
   },
 };

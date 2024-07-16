@@ -34,6 +34,9 @@ app.get("/", (req, res) => {
 const blendRouter = require("./api/blend/blend.router");
 app.use("/api/blend", blendRouter);
 
+const blendRouterDatewise = require("./api/blend/blend.router.datewise");
+app.use("/api/blend/datewise", blendRouterDatewise);
+
 const reclaimingRouter = require("./api/reclaiming/reclaiming.router");
 app.use("/api/reclaiming", reclaimingRouter);
 

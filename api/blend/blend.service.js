@@ -11,6 +11,28 @@ module.exports = {
     }
   },
 
+  blendServiceGetDatewise: async (
+    selectedFromDate,
+    selectedToDate,
+    callback
+  ) => {
+    try {
+      const formatedFromDate = selectedFromDate + "T00:00:00.000+00:00"; //"T23:59:59.999+00:00";
+      const formatedToDate = selectedToDate + "T00:00:00.000+00:00"; //"T23:59:59.999+00:00";
+
+      let blendResults = await Blend.find({
+        date: { $gte: formatedFromDate, $lte: formatedToDate },
+      })
+        .sort({ date: 1, shift: 1 })
+        .exec();
+
+      return callback(null, blendResults);
+    } catch (error) {
+      console.log(error);
+      return callback(error);
+    }
+  },
+
   blendServiceGet: async (selectedDate, selectedShift, callback) => {
     const formatedDate = selectedDate + "T00:00:00.000+00:00"; //"T23:59:59.999+00:00";
 
