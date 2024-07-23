@@ -39,6 +39,7 @@ module.exports = {
           ct3: data.ct3,
           stream1: data.stream1,
           stream1A: data.stream1A,
+          New_Stream: data.New_Stream,
           total_feeding: data.total_feeding,
         },
         { new: true }

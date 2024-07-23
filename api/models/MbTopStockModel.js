@@ -57,6 +57,60 @@ const mbtopStockSchema = mongoose.Schema({
   coal8stock: {
     type: Number,
   },
+  oldcoal1name: {
+    type: String,
+  },
+  oldcoal1stock: {
+    type: Number,
+  },
+  oldcoal2name: {
+    type: String,
+  },
+  oldcoal2stock: {
+    type: Number,
+  },
+  oldcoal3name: {
+    type: String,
+  },
+  oldcoal3stock: {
+    type: Number,
+  },
+  oldcoal4name: {
+    type: String,
+  },
+  oldcoal4stock: {
+    type: Number,
+  },
+  oldcoal5name: {
+    type: String,
+  },
+  oldcoal5stock: {
+    type: Number,
+  },
+  oldcoal6name: {
+    type: String,
+  },
+  oldcoal6stock: {
+    type: Number,
+  },
+  oldcoal7name: {
+    type: String,
+  },
+  oldcoal7stock: {
+    type: Number,
+  },
+  oldcoal7name: {
+    type: String,
+  },
+  oldcoal7stock: {
+    type: Number,
+  },
+  oldcoal8name: {
+    type: String,
+  },
+  oldcoal8stock: {
+    type: Number,
+  },
   total_stock: {
     type: Number,
   },

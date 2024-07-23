@@ -24,6 +24,9 @@ const feedingSchema = mongoose.Schema({
   stream1A: {
     type: Number,
   },
+  New_Stream: {
+    type: Number,
+  },
   total_feeding: {
     type: Number,
   },
