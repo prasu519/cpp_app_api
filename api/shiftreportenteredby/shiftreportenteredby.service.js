@@ -22,4 +22,17 @@ module.exports = {
       return callback(error);
     }
   },
+  shiftReportEnteredByLatest: async (callback) => {
+    try {
+      const getLatestShiftReport = await ShiftReportEnteredBy.findOne().sort({
+        date: -1,
+        shift: -1,
+      });
+
+      console.log(getLatestShiftReport);
+      return callback(null, getLatestShiftReport);
+    } catch (error) {
+      return console.log(error);
+    }
+  },
 };

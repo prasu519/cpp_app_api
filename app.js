@@ -75,3 +75,6 @@ app.use("/api/employedetails", employeDetailsRouter);
 
 const shiftReportEnteredByRouter = require("./api/shiftreportenteredby/shiftreportenteredby.router");
 app.use("/api/shiftreportenteredby", shiftReportEnteredByRouter);
+
+const shiftReportEnteredByRouterLatest = require("./api/shiftreportenteredby/shiftreportenteredbylatest.router");
+app.use("/api/shiftreportenteredbylatest", shiftReportEnteredByRouterLatest);
