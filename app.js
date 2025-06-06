@@ -67,6 +67,9 @@ app.use("/api/coalAnalysis", coalAnalysisRouter);
 const pushingScheduleRouter = require("./api/pushingschedule/pushingschedule.router");
 app.use("/api/pushings", pushingScheduleRouter);
 
+const crusherStatusRouter = require("./api/crusherstatus/crusherstatus.router");
+app.use("/api/crusher", crusherStatusRouter);
+
 const pushingScheduleRouterDaywise = require("./api/pushingschedule/pushingschedule.router.daywise");
 app.use("/api/pushings/daywise", pushingScheduleRouterDaywise);
 
