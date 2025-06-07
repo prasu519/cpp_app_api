@@ -24,6 +24,12 @@ const feedingSchema = mongoose.Schema({
   stream1A: {
     type: Number,
   },
+  auto: {
+    type: Number,
+  },
+  nonauto: {
+    type: Number,
+  },
   New_Stream: {
     type: Number,
   },
