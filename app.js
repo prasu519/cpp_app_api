@@ -52,6 +52,9 @@ app.use("/api/feeding/daywise", feedingRouterDaywise);
 const runningHoursRouter = require("./api/runninghours/runninghours.router");
 app.use("/api/runningHours", runningHoursRouter);
 
+const runningHoursDaywiseRouter = require("./api/runninghours/runninghours.router.daywise");
+app.use("/api/runningHours/daywise", runningHoursDaywiseRouter);
+
 const shiftDelayRouter = require("./api/shiftdelays/shiftdelays.router");
 app.use("/api/shiftDelay", shiftDelayRouter);
 

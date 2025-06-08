@@ -1,6 +1,7 @@
 const {
   runningHoursService,
   runningHoursServiceRead,
+  runningHoursServiceReadDaywise,
   runningHoursServiceUpdate,
 } = require("./runninghours.service");
 
@@ -24,7 +25,6 @@ module.exports = {
   runningHoursControllerRead: (req, res) => {
     const date = req.query.date;
     const shift = req.query.shift;
-
     runningHoursServiceRead(date, shift, (error, results) => {
       if (error) {
         return res.status(500).json({
@@ -32,7 +32,22 @@ module.exports = {
           message: error,
         });
       }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
 
+  runningHoursControllerReadDaywise: (req, res) => {
+    const date = req.query.date;
+    runningHoursServiceReadDaywise(date, (error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
       return res.status(200).json({
         success: 1,
         data: results,

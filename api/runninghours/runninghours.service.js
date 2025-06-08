@@ -22,6 +22,18 @@ module.exports = {
       return callback(error);
     }
   },
+
+  runningHoursServiceReadDaywise: async (date, callback) => {
+    try {
+      const getRunningHoursDaywise = await RunningHours.find({
+        date: date,
+      });
+      return callback(null, getRunningHoursDaywise);
+    } catch (error) {
+      return callback(error);
+    }
+  },
+
   runningHoursServiceUpdate: async (data, callBack) => {
     try {
       const updateRunningHours = await RunningHours.updateOne(
