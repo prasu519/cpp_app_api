@@ -105,6 +105,42 @@ const reclaimingSchema = mongoose.Schema({
   excoal8recl: {
     type: Number,
   },
+  cpp3coal1name: {
+    type: String,
+  },
+  cpp3coal1recl: {
+    type: Number,
+  },
+  cpp3coal2name: {
+    type: String,
+  },
+  cpp3coal2recl: {
+    type: Number,
+  },
+  cpp3coal3name: {
+    type: String,
+  },
+  cpp3coal3recl: {
+    type: Number,
+  },
+  cpp3coal4name: {
+    type: String,
+  },
+  cpp3coal4recl: {
+    type: Number,
+  },
+  cpp3coal5name: {
+    type: String,
+  },
+  cpp3coal5recl: {
+    type: Number,
+  },
+  cpp3coal6name: {
+    type: String,
+  },
+  cpp3coal6recl: {
+    type: Number,
+  },
   cc49recl: {
     type: Number,
   },
@@ -114,7 +150,16 @@ const reclaimingSchema = mongoose.Schema({
   cc126recl: {
     type: Number,
   },
+  patharecl: {
+    type: Number,
+  },
+  pathbrecl: {
+    type: Number,
+  },
   total_reclaiming: {
+    type: Number,
+  },
+  cpp3total_reclaiming: {
     type: Number,
   },
 });
