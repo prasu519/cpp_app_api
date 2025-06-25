@@ -33,10 +33,23 @@ module.exports = {
       return console.log(error);
     }
   },
-  shiftReportEnteredByDelete: async (date, shift, callback) => {
-    console.log("date&shift: ", date, shift);
+  shiftReportEnteredByUpdate: async (data, callBack) => {
     try {
-      const deleted = await ShiftReportEnteredBy.deleteOne({
+      const updateShiftReportEnteredBy = await ShiftReportEnteredBy.updateOne(
+        { date: data.date, shift: data.shift },
+        {
+          reportStatus: data.reportStatus,
+        },
+        { new: true }
+      );
+      return callBack(null, updateShiftReportEnteredBy);
+    } catch (error) {
+      return callBack(error);
+    }
+  },
+  shiftReportEnteredByDelete: async (date, shift, callback) => {
+    try {
+      const deleted = await ShiftReportEnteredBy.deleteMany({
         date: date,
         shift: shift,
       });

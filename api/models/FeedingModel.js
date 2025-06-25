@@ -33,9 +33,6 @@ const feedingSchema = mongoose.Schema({
   nonauto: {
     type: Number,
   },
-  New_Stream: {
-    type: Number,
-  },
   total_feeding: {
     type: Number,
   },

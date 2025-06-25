@@ -39,13 +39,35 @@ module.exports = {
           oldcoal6stock: data.oldcoal6stock,
           oldcoal7stock: data.oldcoal7stock,
           oldcoal8stock: data.oldcoal8stock,
+          cpp3coal1stock: data.cpp3coal1stock,
+          cpp3coal2stock: data.cpp3coal2stock,
+          cpp3coal3stock: data.cpp3coal3stock,
+          cpp3coal4stock: data.cpp3coal4stock,
+          cpp3coal5stock: data.cpp3coal5stock,
+          cpp3coal6stock: data.cpp3coal6stock,
           total_stock: data.total_stock,
+          cpp3total_stock: data.cpp3total_stock,
         },
         { new: true }
       );
       return callBack(null, updateMbTopStock);
     } catch (error) {
       return callBack(error);
+    }
+  },
+  mbtopstockServiceDelete: async (date, shift, callback) => {
+    try {
+      const deleted = await MbTopStock.deleteMany({
+        date: date,
+        shift: shift,
+      });
+      if (deleted.deletedCount === 0) {
+        return callback(new Error("No matching shift report found to delete"));
+      }
+      return callback(null, deleted);
+    } catch (error) {
+      console.log(error);
+      return callback(error);
     }
   },
 };

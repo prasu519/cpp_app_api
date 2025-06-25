@@ -3,6 +3,7 @@ const {
   shiftReportEnteredByRead,
   shiftReportEnteredByLatest,
   shiftReportEnteredByDelete,
+  shiftReportEnteredByUpdate,
 } = require("../shiftreportenteredby/shiftreportenteredby.service");
 
 module.exports = {
@@ -39,6 +40,21 @@ module.exports = {
   },
   shiftReportEnteredByControllerLatest: (req, res) => {
     shiftReportEnteredByLatest((error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
+  shiftReportEnteredByControllerUpdate: (req, res) => {
+    const data = req.body;
+    shiftReportEnteredByUpdate(data, (error, results) => {
       if (error) {
         return res.status(500).json({
           success: 0,

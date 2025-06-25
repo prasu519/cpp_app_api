@@ -2,6 +2,7 @@ const {
   feedingService,
   feedingServiceRead,
   feedingServiceUpdate,
+  feedingServiceDelete,
   feedingServiceReadDaywise,
 } = require("./feeding.service");
 
@@ -71,6 +72,22 @@ module.exports = {
   feedingControllerUpdate: (req, res) => {
     const data = req.body;
     feedingServiceUpdate(data, (error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
+  feedingControllerDelete: (req, res) => {
+    const date = req.query.date;
+    const shift = req.query.shift;
+    feedingServiceDelete(date, shift, (error, results) => {
       if (error) {
         return res.status(500).json({
           success: 0,

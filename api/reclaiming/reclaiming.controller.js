@@ -3,6 +3,7 @@ const {
   reclaimingServiceRead,
   reclaimingServiceReadDaywise,
   reclaimingServiceUpdate,
+  reclaimingServiceDelete,
 } = require("./reclaiming.service");
 
 module.exports = {
@@ -60,6 +61,22 @@ module.exports = {
   reclaimingControllerUpdate: (req, res) => {
     const data = req.body;
     reclaimingServiceUpdate(data, (error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
+  reclaimingControllerDelete: (req, res) => {
+    const date = req.query.date;
+    const shift = req.query.shift;
+    reclaimingServiceDelete(date, shift, (error, results) => {
       if (error) {
         return res.status(500).json({
           success: 0,

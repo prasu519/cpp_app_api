@@ -59,4 +59,19 @@ module.exports = {
       return callBack(error);
     }
   },
+  runningHoursServiceDelete: async (date, shift, callback) => {
+    try {
+      const deleted = await RunningHours.deleteMany({
+        date: date,
+        shift: shift,
+      });
+      if (deleted.deletedCount === 0) {
+        return callback(new Error("No matching shift report found to delete"));
+      }
+      return callback(null, deleted);
+    } catch (error) {
+      console.log(error);
+      return callback(error);
+    }
+  },
 };

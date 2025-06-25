@@ -2,6 +2,7 @@ const {
   crusherStatusService,
   crusherStatusServiceRead,
   crusherStatusServiceUpdate,
+  crusherStatusServiceDelete,
 } = require("../crusherstatus/crusherstatus.service");
 
 module.exports = {
@@ -44,6 +45,22 @@ module.exports = {
     crusherStatusServiceUpdate(data, (error, results) => {
       if (error) {
         console.log(error);
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
+  crusherStatusControllerDelete: (req, res) => {
+    const date = req.query.date;
+    const shift = req.query.shift;
+    crusherStatusServiceDelete(date, shift, (error, results) => {
+      if (error) {
         return res.status(500).json({
           success: 0,
           message: error,

@@ -39,7 +39,9 @@ module.exports = {
           ct3: data.ct3,
           stream1: data.stream1,
           stream1A: data.stream1A,
-          New_Stream: data.New_Stream,
+          pathc: data.pathc,
+          auto: data.auto,
+          nonauto: data.nonauto,
           total_feeding: data.total_feeding,
         },
         { new: true }
@@ -47,6 +49,21 @@ module.exports = {
       return callBack(null, updateFeeding);
     } catch (error) {
       return callBack(error);
+    }
+  },
+  feedingServiceDelete: async (date, shift, callback) => {
+    try {
+      const deleted = await Feeding.deleteMany({
+        date: date,
+        shift: shift,
+      });
+      if (deleted.deletedCount === 0) {
+        return callback(new Error("No matching shift report found to delete"));
+      }
+      return callback(null, deleted);
+    } catch (error) {
+      console.log(error);
+      return callback(error);
     }
   },
 };

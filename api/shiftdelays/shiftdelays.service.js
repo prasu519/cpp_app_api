@@ -38,7 +38,7 @@ module.exports = {
 
   shiftDelayServiceDelete: async (date, shift, delaynumber, callback) => {
     try {
-      const deleteShiftDelay = await ShiftDelays.deleteOne({
+      const deleteShiftDelay = await ShiftDelays.deleteMany({
         date: date,
         shift: shift,
         delayNumber: delaynumber,
