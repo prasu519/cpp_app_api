@@ -66,4 +66,34 @@ module.exports = {
       return callback(error);
     }
   },
+  feedingServiceTotalFeeding: async (fromdate, todate, callback) => {
+    try {
+      const result = await Feeding.aggregate([
+        {
+          $match: {
+            date: { $gte: new Date(fromdate), $lte: new Date(todate) },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalStream1: { $sum: "$stream1" },
+            totalStream1A: { $sum: "$stream1A" },
+            totalPathC: { $sum: "$pathc" },
+          },
+        },
+      ]);
+      if (!result.length) {
+        return callback(
+          new Error("No Total Feeding found for the given date range")
+        );
+      }
+      // return individual totals
+      const { totalStream1, totalStream1A, totalPathC } = result[0];
+      return callback(null, { totalStream1, totalStream1A, totalPathC });
+    } catch (error) {
+      console.log(error);
+      return callback(error);
+    }
+  },
 };

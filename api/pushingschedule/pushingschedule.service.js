@@ -69,4 +69,31 @@ module.exports = {
       return callback(error);
     }
   },
+  reclaimingServiceTotPushings: async (fromdate, todate, callback) => {
+    try {
+      //console.log(fromdate.todate);
+      const totpush = await PushingSchedule.aggregate([
+        {
+          $match: {
+            date: { $gte: new Date(fromdate), $lte: new Date(todate) },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totpushings: { $sum: "$total_pushings" },
+          },
+        },
+      ]);
+      if (!totpush.length) {
+        return callback(
+          new Error("No Total pushings found for the given date range")
+        );
+      }
+      return callback(null, totpush[0].totpushings);
+    } catch (error) {
+      console.log(error);
+      return callback(error);
+    }
+  },
 };

@@ -56,4 +56,33 @@ module.exports = {
       return callback(error);
     }
   },
+  coalAnalysisServiceAvgCI: async (fromdate, todate, callback) => {
+    try {
+      const avgCI = await CoalAnalysis.aggregate([
+        {
+          $match: {
+            date: {
+              $gte: new Date(fromdate),
+              $lte: new Date(todate),
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            avgci: { $avg: { $toDouble: "$ci" } },
+          },
+        },
+      ]);
+
+      if (!avgCI.length || avgCI[0].avgci === 0) {
+        return callback(new Error("Average of Crushing index not done"));
+      }
+
+      return callback(null, avgCI[0].avgci);
+    } catch (error) {
+      console.error(error);
+      return callback(error);
+    }
+  },
 };

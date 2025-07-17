@@ -4,6 +4,7 @@ const {
   pushingScheduleServiceUpdate,
   pushingScheduleServiceDelete,
   pushingScheduleServiceReadDaywise,
+  reclaimingServiceTotPushings,
 } = require("../pushingschedule/pushingschedule.service");
 
 module.exports = {
@@ -78,6 +79,22 @@ module.exports = {
     const date = req.query.date;
     const shift = req.query.shift;
     pushingScheduleServiceDelete(date, shift, (error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
+  pushingScheduleControllerTotPushings: (req, res) => {
+    const fdate = req.query.fromdate;
+    const tdate = req.query.todate;
+    reclaimingServiceTotPushings(fdate, tdate, (error, results) => {
       if (error) {
         return res.status(500).json({
           success: 0,

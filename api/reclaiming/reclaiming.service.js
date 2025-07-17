@@ -2,11 +2,13 @@ const Reclaiming = require("../models/ReclaimingModel");
 
 module.exports = {
   reclaimingService: async (data, callback) => {
+    console.log(data);
     try {
       const addReclaiming = new Reclaiming(data);
       await addReclaiming.save();
       return callback(null, addReclaiming);
     } catch (error) {
+      console.log(error);
       return callback(error);
     }
   },
@@ -87,6 +89,50 @@ module.exports = {
         return callback(new Error("No report found to delete in reclaiming"));
       }
       return callback(null, deleted);
+    } catch (error) {
+      console.log(error);
+      return callback(error);
+    }
+  },
+  reclaimingServiceTotalRecl: async (fromdate, todate, callback) => {
+    try {
+      //console.log(fromdate.todate);
+      const totalRecl = await Reclaiming.aggregate([
+        {
+          $match: {
+            date: { $gte: new Date(fromdate), $lte: new Date(todate) },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totCC49Recl: { $sum: "$cc49recl" },
+            totCC50Recl: { $sum: "$cc50recl" },
+            totCC126Recl: { $sum: "$cc126recl" },
+            totCpp1Recl: { $sum: "$total_reclaiming" },
+            totCpp3Recl: { $sum: "$cpp3total_reclaiming" },
+          },
+        },
+      ]);
+      if (!totalRecl.length) {
+        return callback(
+          new Error("No Total Reclaiming found for the given date range")
+        );
+      }
+      const {
+        totCC49Recl,
+        totCC50Recl,
+        totCC126Recl,
+        totCpp1Recl,
+        totCpp3Recl,
+      } = totalRecl[0];
+      return callback(null, {
+        totCC49Recl,
+        totCC50Recl,
+        totCC126Recl,
+        totCpp1Recl,
+        totCpp3Recl,
+      });
     } catch (error) {
       console.log(error);
       return callback(error);
