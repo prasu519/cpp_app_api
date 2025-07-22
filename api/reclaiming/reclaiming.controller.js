@@ -5,6 +5,8 @@ const {
   reclaimingServiceUpdate,
   reclaimingServiceDelete,
   reclaimingServiceTotalRecl,
+  getTotalReclaimingByAllCoalNames,
+  getTotalReclaimingByAllCoalNamesCpp3,
 } = require("./reclaiming.service");
 
 module.exports = {
@@ -94,6 +96,38 @@ module.exports = {
     const fdate = req.query.fdate;
     const tdate = req.query.tdate;
     reclaimingServiceTotalRecl(fdate, tdate, (error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
+  reclaimingControllerByAllCoalNames: (req, res) => {
+    const fdate = req.query.fdate;
+    const tdate = req.query.tdate;
+    getTotalReclaimingByAllCoalNames(fdate, tdate, (error, results) => {
+      if (error) {
+        return res.status(500).json({
+          success: 0,
+          message: error,
+        });
+      }
+      return res.status(200).json({
+        success: 1,
+        data: results,
+      });
+    });
+  },
+  reclaimingControllerByAllCoalNamesCpp3: (req, res) => {
+    const fdate = req.query.fdate;
+    const tdate = req.query.tdate;
+    getTotalReclaimingByAllCoalNamesCpp3(fdate, tdate, (error, results) => {
       if (error) {
         return res.status(500).json({
           success: 0,

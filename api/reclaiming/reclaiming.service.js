@@ -138,4 +138,129 @@ module.exports = {
       return callback(error);
     }
   },
+  getTotalReclaimingByAllCoalNames: async (fromdate, todate, callback) => {
+    try {
+      const totals = await Reclaiming.aggregate([
+        {
+          $match: {
+            date: { $gte: new Date(fromdate), $lte: new Date(todate) },
+          },
+        },
+        {
+          $project: {
+            coalEntries: {
+              $concatArrays: [
+                [
+                  { name: "$coal1name", recl: "$coal1recl" },
+                  { name: "$coal2name", recl: "$coal2recl" },
+                  { name: "$coal3name", recl: "$coal3recl" },
+                  { name: "$coal4name", recl: "$coal4recl" },
+                  { name: "$coal5name", recl: "$coal5recl" },
+                  { name: "$coal6name", recl: "$coal6recl" },
+                  { name: "$coal7name", recl: "$coal7recl" },
+                  { name: "$coal8name", recl: "$coal8recl" },
+
+                  { name: "$excoal1name", recl: "$excoal1recl" },
+                  { name: "$excoal2name", recl: "$excoal2recl" },
+                  { name: "$excoal3name", recl: "$excoal3recl" },
+                  { name: "$excoal4name", recl: "$excoal4recl" },
+                  { name: "$excoal5name", recl: "$excoal5recl" },
+                  { name: "$excoal6name", recl: "$excoal6recl" },
+                  { name: "$excoal7name", recl: "$excoal7recl" },
+                  { name: "$excoal8name", recl: "$excoal8recl" },
+                ],
+              ],
+            },
+          },
+        },
+        { $unwind: "$coalEntries" },
+        {
+          $match: {
+            "coalEntries.name": { $nin: [null, ""] }, // remove null names and empty string
+          },
+        },
+        {
+          $group: {
+            _id: "$coalEntries.name",
+            totalRecl: { $sum: "$coalEntries.recl" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            coalName: "$_id",
+            totalReclaiming: "$totalRecl",
+          },
+        },
+      ]);
+
+      // Convert array to object: { MN: 5000, BWS: 2000, ... }
+      const result = {};
+      totals.forEach(({ coalName, totalReclaiming }) => {
+        result[coalName] = totalReclaiming;
+      });
+
+      return callback(null, result);
+    } catch (error) {
+      console.error("Aggregation error:", error);
+      return callback(error);
+    }
+  },
+  getTotalReclaimingByAllCoalNamesCpp3: async (fromdate, todate, callback) => {
+    try {
+      const totals = await Reclaiming.aggregate([
+        {
+          $match: {
+            date: { $gte: new Date(fromdate), $lte: new Date(todate) },
+          },
+        },
+        {
+          $project: {
+            coalEntries: {
+              $concatArrays: [
+                [
+                  { name: "$cpp3coal1name", recl: "$cpp3coal1recl" },
+                  { name: "$cpp3coal2name", recl: "$cpp3coal2recl" },
+                  { name: "$cpp3coal3name", recl: "$cpp3coal3recl" },
+                  { name: "$cpp3coal4name", recl: "$cpp3coal4recl" },
+                  { name: "$cpp3coal5name", recl: "$cpp3coal5recl" },
+                  { name: "$cpp3coal6name", recl: "$cpp3coal6recl" },
+                ],
+              ],
+            },
+          },
+        },
+        { $unwind: "$coalEntries" },
+        {
+          $match: {
+            "coalEntries.name": { $nin: [null, ""] }, // remove null names and empty string
+          },
+        },
+        {
+          $group: {
+            _id: { $toUpper: "$coalEntries.name" }, // Normalize to UPPERCASE
+            totalRecl: { $sum: "$coalEntries.recl" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            coalName: "$_id",
+            totalReclaiming: "$totalRecl",
+          },
+        },
+      ]);
+
+      // Convert array to object: { MN: 5000, BWS: 2000, ... }
+      const result = {};
+      totals.forEach(({ coalName, totalReclaiming }) => {
+        result[coalName] = totalReclaiming;
+      });
+
+      return callback(null, result);
+    } catch (error) {
+      console.error("Aggregation error:", error);
+      return callback(error);
+    }
+  },
 };
