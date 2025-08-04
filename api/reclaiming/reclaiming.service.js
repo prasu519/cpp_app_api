@@ -111,6 +111,8 @@ module.exports = {
             totCC126Recl: { $sum: "$cc126recl" },
             totCpp1Recl: { $sum: "$total_reclaiming" },
             totCpp3Recl: { $sum: "$cpp3total_reclaiming" },
+            totPathARecl: { $sum: "$patharecl" },
+            totPathBRecl: { $sum: "$pathbrecl" },
           },
         },
       ]);
@@ -125,6 +127,8 @@ module.exports = {
         totCC126Recl,
         totCpp1Recl,
         totCpp3Recl,
+        totPathARecl,
+        totPathBRecl,
       } = totalRecl[0];
       return callback(null, {
         totCC49Recl,
@@ -132,6 +136,8 @@ module.exports = {
         totCC126Recl,
         totCpp1Recl,
         totCpp3Recl,
+        totPathARecl,
+        totPathBRecl,
       });
     } catch (error) {
       console.log(error);
