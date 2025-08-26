@@ -72,7 +72,7 @@ module.exports = {
     }
   },
   crusherStatusServiceFeedersTotal: async (fromdate, todate, callback) => {
-    console.log(fromdate, todate);
+    //19100
     try {
       const result = await CrusherStatus.aggregate([
         {
@@ -96,12 +96,13 @@ module.exports = {
           },
         },
       ]);
+
       if (!result.length) {
         return callback(
           new Error("No Total Feeding found for the given date range")
         );
       }
-      console.log(result);
+
       // return individual totals
       const {
         cr34Feeder1Total,

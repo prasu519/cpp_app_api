@@ -84,3 +84,6 @@ app.use("/api/shiftreportenteredby", shiftReportEnteredByRouter);
 
 const shiftReportEnteredByRouterLatest = require("./api/shiftreportenteredby/shiftreportenteredbylatest.router");
 app.use("/api/shiftreportenteredbylatest", shiftReportEnteredByRouterLatest);
+
+const coalNameListRouter = require("./api/coalnamelist/coalnamelist.router");
+app.use("/api/coalnamelist", coalNameListRouter);
