@@ -1,9 +1,20 @@
 const Blend = require("../models/BlendModel");
+const BlendCpp3 = require("../models/BlendModelCpp3");
 
 module.exports = {
   blendServicePost: async (data, callback) => {
     try {
       const addBlend = new Blend(data);
+      await addBlend.save();
+      return callback(null, addBlend);
+    } catch (error) {
+      return callback(error);
+    }
+  },
+
+  blendServicePostCpp3: async (data, callback) => {
+    try {
+      const addBlend = new BlendCpp3(data);
       await addBlend.save();
       return callback(null, addBlend);
     } catch (error) {
@@ -27,6 +38,28 @@ module.exports = {
         .exec();
 
       return callback(null, blendResults);
+    } catch (error) {
+      console.log(error);
+      return callback(error);
+    }
+  },
+
+  blendServiceGetDatewiseCpp3: async (
+    selectedFromDate,
+    selectedToDate,
+    callback
+  ) => {
+    try {
+      const formatedFromDate = selectedFromDate + "T00:00:00.000+00:00"; //"T23:59:59.999+00:00";
+      const formatedToDate = selectedToDate + "T00:00:00.000+00:00"; //"T23:59:59.999+00:00";
+
+      let blendResultsCpp3 = await BlendCpp3.find({
+        date: { $gte: formatedFromDate, $lte: formatedToDate },
+      })
+        .sort({ date: 1, shift: 1 })
+        .exec();
+
+      return callback(null, blendResultsCpp3);
     } catch (error) {
       console.log(error);
       return callback(error);
