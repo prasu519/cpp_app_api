@@ -80,6 +80,9 @@ module.exports = {
             totalStream1: { $sum: "$stream1" },
             totalStream1A: { $sum: "$stream1A" },
             totalPathC: { $sum: "$pathc" },
+            totalCt1: { $sum: "$ct1" },
+            totalCt2: { $sum: "$ct2" },
+            totalCt3: { $sum: "$ct3" },
           },
         },
       ]);
@@ -89,8 +92,22 @@ module.exports = {
         );
       }
       // return individual totals
-      const { totalStream1, totalStream1A, totalPathC } = result[0];
-      return callback(null, { totalStream1, totalStream1A, totalPathC });
+      const {
+        totalStream1,
+        totalStream1A,
+        totalPathC,
+        totalCt1,
+        totalCt2,
+        totalCt3,
+      } = result[0];
+      return callback(null, {
+        totalStream1,
+        totalStream1A,
+        totalPathC,
+        totalCt1,
+        totalCt2,
+        totalCt3,
+      });
     } catch (error) {
       console.log(error);
       return callback(error);
