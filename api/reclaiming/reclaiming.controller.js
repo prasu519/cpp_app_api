@@ -94,50 +94,75 @@ module.exports = {
   },
   reclaimingControllerTotRecl: (req, res) => {
     const fdate = req.query.fdate;
+    const fshift = req.query.fshift;
     const tdate = req.query.tdate;
-    reclaimingServiceTotalRecl(fdate, tdate, (error, results) => {
-      if (error) {
-        return res.status(500).json({
-          success: 0,
-          message: error,
+    const tshift = req.query.tshift;
+    reclaimingServiceTotalRecl(
+      fdate,
+      fshift,
+      tdate,
+      tshift,
+      (error, results) => {
+        if (error) {
+          return res.status(500).json({
+            success: 0,
+            message: error,
+          });
+        }
+        return res.status(200).json({
+          success: 1,
+          data: results,
         });
       }
-      return res.status(200).json({
-        success: 1,
-        data: results,
-      });
-    });
+    );
   },
   reclaimingControllerByAllCoalNames: (req, res) => {
     const fdate = req.query.fdate;
+    const fshift = req.query.fshift;
     const tdate = req.query.tdate;
-    getTotalReclaimingByAllCoalNames(fdate, tdate, (error, results) => {
-      if (error) {
-        return res.status(500).json({
-          success: 0,
-          message: error,
+    const tshift = req.query.tshift;
+
+    getTotalReclaimingByAllCoalNames(
+      fdate,
+      fshift,
+      tdate,
+      tshift,
+      (error, results) => {
+        if (error) {
+          return res.status(500).json({
+            success: 0,
+            message: error,
+          });
+        }
+        return res.status(200).json({
+          success: 1,
+          data: results,
         });
       }
-      return res.status(200).json({
-        success: 1,
-        data: results,
-      });
-    });
+    );
   },
   reclaimingControllerByAllCoalNamesCpp3: (req, res) => {
     const fdate = req.query.fdate;
     const tdate = req.query.tdate;
-    getTotalReclaimingByAllCoalNamesCpp3(fdate, tdate, (error, results) => {
-      if (error) {
-        return res.status(500).json({
-          success: 0,
-          message: error,
+    const fshift = req.query.fshift;
+    const tshift = req.query.tshift;
+    getTotalReclaimingByAllCoalNamesCpp3(
+      fdate,
+      fshift,
+      tdate,
+      tshift,
+      (error, results) => {
+        if (error) {
+          return res.status(500).json({
+            success: 0,
+            message: error,
+          });
+        }
+        return res.status(200).json({
+          success: 1,
+          data: results,
         });
       }
-      return res.status(200).json({
-        success: 1,
-        data: results,
-      });
-    });
+    );
   },
 };

@@ -1,5 +1,6 @@
 const Blend = require("../models/BlendModel");
 const BlendCpp3 = require("../models/BlendModelCpp3");
+const { feedingServiceTotalFeeding } = require("../feeding/feeding.service");
 
 module.exports = {
   blendServicePost: async (data, callback) => {

@@ -94,10 +94,88 @@ module.exports = {
       return callback(error);
     }
   },
-  reclaimingServiceTotalRecl: async (fromdate, todate, callback) => {
+  reclaimingServiceTotalRecl: async (
+    fromdate,
+    fromshift,
+    todate,
+    toshift,
+    callback
+  ) => {
     try {
+      // ---------- validate shifts ----------
+      const shiftOrder = ["A", "B", "C"];
+      const startIdx = shiftOrder.indexOf(fromshift);
+      const endIdx = shiftOrder.indexOf(toshift);
+      if (startIdx === -1 || endIdx === -1) {
+        return callback(new Error("Invalid shift. Use 'A', 'B' or 'C'."));
+      }
+
+      // ---------- normalize dates to midnight (day-only) ----------
+      const startDate = new Date(fromdate);
+      const endDate = new Date(todate);
+
+      // If same date but fromShifS > toshift (wrap on next day), treat endDate as next day
+      if (startDate.getTime() === endDate.getTime() && startIdx > endIdx) {
+        endDate.setDate(endDate.getDate() + 1);
+      }
+
+      // ---------- build shift slices ----------
+      const shiftsFromStart = shiftOrder.slice(startIdx); // from fromshift .. C
+      const shiftsToEnd = shiftOrder.slice(0, endIdx + 1); // A .. toshift
+      const allShifts = shiftOrder;
+
+      // ---------- build matchCondition ----------
+      let matchCondition;
+      if (startDate.getTime() === endDate.getTime()) {
+        // On same day and non-wrapping (startIdx <= endIdx): only shifts between fromshift..toshift
+        if (startIdx > endIdx) {
+          // This shouldn't happen because we handled same-day wrap above; still guard
+          return callback(
+            new Error(
+              "Invalid range for same date. Use fromshift <= toshift or supply a later toDate."
+            )
+          );
+        }
+        matchCondition = {
+          date: startDate,
+          shift: { $in: shiftOrder.slice(startIdx, endIdx + 1) },
+        };
+      } else {
+        // Different dates: three-part OR
+        matchCondition = {
+          $or: [
+            // start date: from fromshift .. C
+            { date: startDate, shift: { $in: shiftsFromStart } },
+
+            // end date: A .. toshift
+            { date: endDate, shift: { $in: shiftsToEnd } },
+
+            // dates strictly between startDate and endDate -> all shifts
+            {
+              date: { $gt: startDate, $lt: endDate },
+              shift: { $in: allShifts },
+            },
+          ],
+        };
+      }
+      const pipeline = [
+        { $match: matchCondition },
+        {
+          $group: {
+            _id: null,
+            totCC49Recl: { $sum: "$cc49recl" },
+            totCC50Recl: { $sum: "$cc50recl" },
+            totCC126Recl: { $sum: "$cc126recl" },
+            totCpp1Recl: { $sum: "$total_reclaiming" },
+            totCpp3Recl: { $sum: "$cpp3total_reclaiming" },
+            totPathARecl: { $sum: "$patharecl" },
+            totPathBRecl: { $sum: "$pathbrecl" },
+          },
+        },
+      ];
+      const result = await Reclaiming.aggregate(pipeline);
       //console.log(fromdate.todate);
-      const totalRecl = await Reclaiming.aggregate([
+      /* const totalRecl = await Reclaiming.aggregate([
         {
           $match: {
             date: { $gte: new Date(fromdate), $lte: new Date(todate) },
@@ -115,8 +193,8 @@ module.exports = {
             totPathBRecl: { $sum: "$pathbrecl" },
           },
         },
-      ]);
-      if (!totalRecl.length) {
+      ]);*/
+      if (!result.length) {
         return callback(
           new Error("No Total Reclaiming found for the given date range")
         );
@@ -129,7 +207,7 @@ module.exports = {
         totCpp3Recl,
         totPathARecl,
         totPathBRecl,
-      } = totalRecl[0];
+      } = result[0];
       return callback(null, {
         totCC49Recl,
         totCC50Recl,
@@ -144,9 +222,122 @@ module.exports = {
       return callback(error);
     }
   },
-  getTotalReclaimingByAllCoalNames: async (fromdate, todate, callback) => {
+  getTotalReclaimingByAllCoalNames: async (
+    fromdate,
+    fromshift,
+    todate,
+    toshift,
+    callback
+  ) => {
     try {
-      const totals = await Reclaiming.aggregate([
+      // ---------- validate shifts ----------
+      const shiftOrder = ["A", "B", "C"];
+      const startIdx = shiftOrder.indexOf(fromshift);
+      const endIdx = shiftOrder.indexOf(toshift);
+      if (startIdx === -1 || endIdx === -1) {
+        return callback(new Error("Invalid shift. Use 'A', 'B' or 'C'."));
+      }
+
+      // ---------- normalize dates to midnight (day-only) ----------
+      const startDate = new Date(fromdate);
+      const endDate = new Date(todate);
+
+      // If same date but fromShifS > toshift (wrap on next day), treat endDate as next day
+      if (startDate.getTime() === endDate.getTime() && startIdx > endIdx) {
+        endDate.setDate(endDate.getDate() + 1);
+      }
+
+      // ---------- build shift slices ----------
+      const shiftsFromStart = shiftOrder.slice(startIdx); // from fromshift .. C
+      const shiftsToEnd = shiftOrder.slice(0, endIdx + 1); // A .. toshift
+      const allShifts = shiftOrder;
+
+      // ---------- build matchCondition ----------
+      let matchCondition;
+      if (startDate.getTime() === endDate.getTime()) {
+        // On same day and non-wrapping (startIdx <= endIdx): only shifts between fromshift..toshift
+        if (startIdx > endIdx) {
+          // This shouldn't happen because we handled same-day wrap above; still guard
+          return callback(
+            new Error(
+              "Invalid range for same date. Use fromshift <= toshift or supply a later toDate."
+            )
+          );
+        }
+        matchCondition = {
+          date: startDate,
+          shift: { $in: shiftOrder.slice(startIdx, endIdx + 1) },
+        };
+      } else {
+        // Different dates: three-part OR
+        matchCondition = {
+          $or: [
+            // start date: from fromshift .. C
+            { date: startDate, shift: { $in: shiftsFromStart } },
+
+            // end date: A .. toshift
+            { date: endDate, shift: { $in: shiftsToEnd } },
+
+            // dates strictly between startDate and endDate -> all shifts
+            {
+              date: { $gt: startDate, $lt: endDate },
+              shift: { $in: allShifts },
+            },
+          ],
+        };
+      }
+      const pipeline = [
+        { $match: matchCondition },
+        {
+          $project: {
+            coalEntries: {
+              $concatArrays: [
+                [
+                  { name: "$coal1name", recl: "$coal1recl" },
+                  { name: "$coal2name", recl: "$coal2recl" },
+                  { name: "$coal3name", recl: "$coal3recl" },
+                  { name: "$coal4name", recl: "$coal4recl" },
+                  { name: "$coal5name", recl: "$coal5recl" },
+                  { name: "$coal6name", recl: "$coal6recl" },
+                  { name: "$coal7name", recl: "$coal7recl" },
+                  { name: "$coal8name", recl: "$coal8recl" },
+
+                  { name: "$excoal1name", recl: "$excoal1recl" },
+                  { name: "$excoal2name", recl: "$excoal2recl" },
+                  { name: "$excoal3name", recl: "$excoal3recl" },
+                  { name: "$excoal4name", recl: "$excoal4recl" },
+                  { name: "$excoal5name", recl: "$excoal5recl" },
+                  { name: "$excoal6name", recl: "$excoal6recl" },
+                  { name: "$excoal7name", recl: "$excoal7recl" },
+                  { name: "$excoal8name", recl: "$excoal8recl" },
+                ],
+              ],
+            },
+          },
+        },
+        { $unwind: "$coalEntries" },
+        {
+          $match: {
+            "coalEntries.name": { $nin: [null, ""] }, // remove null names and empty string
+          },
+        },
+        {
+          $group: {
+            _id: "$coalEntries.name",
+            totalRecl: { $sum: "$coalEntries.recl" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            coalName: "$_id",
+            totalReclaiming: "$totalRecl",
+          },
+        },
+      ];
+      const totals = await Reclaiming.aggregate(pipeline);
+
+      /*const totals = await Reclaiming.aggregate([
         {
           $match: {
             date: { $gte: new Date(fromdate), $lte: new Date(todate) },
@@ -198,7 +389,7 @@ module.exports = {
             totalReclaiming: "$totalRecl",
           },
         },
-      ]);
+      ]);*/
 
       // Convert array to object: { MN: 5000, BWS: 2000, ... }
       const result = {};
@@ -212,9 +403,110 @@ module.exports = {
       return callback(error);
     }
   },
-  getTotalReclaimingByAllCoalNamesCpp3: async (fromdate, todate, callback) => {
+  getTotalReclaimingByAllCoalNamesCpp3: async (
+    fromdate,
+    fromshift,
+    todate,
+    toshift,
+    callback
+  ) => {
     try {
-      const totals = await Reclaiming.aggregate([
+      // ---------- validate shifts ----------
+      const shiftOrder = ["A", "B", "C"];
+      const startIdx = shiftOrder.indexOf(fromshift);
+      const endIdx = shiftOrder.indexOf(toshift);
+      if (startIdx === -1 || endIdx === -1) {
+        return callback(new Error("Invalid shift. Use 'A', 'B' or 'C'."));
+      }
+
+      // ---------- normalize dates to midnight (day-only) ----------
+      const startDate = new Date(fromdate);
+      const endDate = new Date(todate);
+
+      // If same date but fromShifS > toshift (wrap on next day), treat endDate as next day
+      if (startDate.getTime() === endDate.getTime() && startIdx > endIdx) {
+        endDate.setDate(endDate.getDate() + 1);
+      }
+
+      // ---------- build shift slices ----------
+      const shiftsFromStart = shiftOrder.slice(startIdx); // from fromshift .. C
+      const shiftsToEnd = shiftOrder.slice(0, endIdx + 1); // A .. toshift
+      const allShifts = shiftOrder;
+
+      // ---------- build matchCondition ----------
+      let matchCondition;
+      if (startDate.getTime() === endDate.getTime()) {
+        // On same day and non-wrapping (startIdx <= endIdx): only shifts between fromshift..toshift
+        if (startIdx > endIdx) {
+          // This shouldn't happen because we handled same-day wrap above; still guard
+          return callback(
+            new Error(
+              "Invalid range for same date. Use fromshift <= toshift or supply a later toDate."
+            )
+          );
+        }
+        matchCondition = {
+          date: startDate,
+          shift: { $in: shiftOrder.slice(startIdx, endIdx + 1) },
+        };
+      } else {
+        // Different dates: three-part OR
+        matchCondition = {
+          $or: [
+            // start date: from fromshift .. C
+            { date: startDate, shift: { $in: shiftsFromStart } },
+
+            // end date: A .. toshift
+            { date: endDate, shift: { $in: shiftsToEnd } },
+
+            // dates strictly between startDate and endDate -> all shifts
+            {
+              date: { $gt: startDate, $lt: endDate },
+              shift: { $in: allShifts },
+            },
+          ],
+        };
+      }
+      const pipeline = [
+        { $match: matchCondition },
+        {
+          $project: {
+            coalEntries: {
+              $concatArrays: [
+                [
+                  { name: "$cpp3coal1name", recl: "$cpp3coal1recl" },
+                  { name: "$cpp3coal2name", recl: "$cpp3coal2recl" },
+                  { name: "$cpp3coal3name", recl: "$cpp3coal3recl" },
+                  { name: "$cpp3coal4name", recl: "$cpp3coal4recl" },
+                  { name: "$cpp3coal5name", recl: "$cpp3coal5recl" },
+                  { name: "$cpp3coal6name", recl: "$cpp3coal6recl" },
+                ],
+              ],
+            },
+          },
+        },
+        { $unwind: "$coalEntries" },
+        {
+          $match: {
+            "coalEntries.name": { $nin: [null, ""] }, // remove null names and empty string
+          },
+        },
+        {
+          $group: {
+            _id: { $toUpper: "$coalEntries.name" }, // Normalize to UPPERCASE
+            totalRecl: { $sum: "$coalEntries.recl" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            coalName: "$_id",
+            totalReclaiming: "$totalRecl",
+          },
+        },
+      ];
+      const totals = await Reclaiming.aggregate(pipeline);
+      /*const totals = await Reclaiming.aggregate([
         {
           $match: {
             date: { $gte: new Date(fromdate), $lte: new Date(todate) },
@@ -256,7 +548,7 @@ module.exports = {
           },
         },
       ]);
-
+      */
       // Convert array to object: { MN: 5000, BWS: 2000, ... }
       const result = {};
       totals.forEach(({ coalName, totalReclaiming }) => {

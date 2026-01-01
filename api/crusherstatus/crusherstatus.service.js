@@ -71,10 +71,91 @@ module.exports = {
       return callback(error);
     }
   },
-  crusherStatusServiceFeedersTotal: async (fromdate, todate, callback) => {
-    //19100
+  crusherStatusServiceFeedersTotal: async (
+    fromdate,
+    fromshift,
+    todate,
+    toshift,
+    callback
+  ) => {
     try {
-      const result = await CrusherStatus.aggregate([
+      // ---------- validate shifts ----------
+      const shiftOrder = ["A", "B", "C"];
+      const startIdx = shiftOrder.indexOf(fromshift);
+      const endIdx = shiftOrder.indexOf(toshift);
+      if (startIdx === -1 || endIdx === -1) {
+        return callback(new Error("Invalid shift. Use 'A', 'B' or 'C'."));
+      }
+
+      // ---------- normalize dates to midnight (day-only) ----------
+      const startDate = new Date(fromdate);
+      const endDate = new Date(todate);
+
+      // If same date but fromShifS > toshift (wrap on next day), treat endDate as next day
+      if (startDate.getTime() === endDate.getTime() && startIdx > endIdx) {
+        endDate.setDate(endDate.getDate() + 1);
+      }
+
+      // ---------- build shift slices ----------
+      const shiftsFromStart = shiftOrder.slice(startIdx); // from fromshift .. C
+      const shiftsToEnd = shiftOrder.slice(0, endIdx + 1); // A .. toshift
+      const allShifts = shiftOrder;
+
+      // ---------- build matchCondition ----------
+      let matchCondition;
+      if (startDate.getTime() === endDate.getTime()) {
+        // On same day and non-wrapping (startIdx <= endIdx): only shifts between fromshift..toshift
+        if (startIdx > endIdx) {
+          // This shouldn't happen because we handled same-day wrap above; still guard
+          return callback(
+            new Error(
+              "Invalid range for same date. Use fromshift <= toshift or supply a later toDate."
+            )
+          );
+        }
+        matchCondition = {
+          date: startDate,
+          shift: { $in: shiftOrder.slice(startIdx, endIdx + 1) },
+        };
+      } else {
+        // Different dates: three-part OR
+        matchCondition = {
+          $or: [
+            // start date: from fromshift .. C
+            { date: startDate, shift: { $in: shiftsFromStart } },
+
+            // end date: A .. toshift
+            { date: endDate, shift: { $in: shiftsToEnd } },
+
+            // dates strictly between startDate and endDate -> all shifts
+            {
+              date: { $gt: startDate, $lt: endDate },
+              shift: { $in: allShifts },
+            },
+          ],
+        };
+      }
+      const pipeline = [
+        { $match: matchCondition },
+        {
+          $group: {
+            _id: null,
+            cr34Feeder1Total: { $sum: "$cr34feeder1coal" },
+            cr34Feeder2Total: { $sum: "$cr34feeder2coal" },
+            cr35Feeder1Total: { $sum: "$cr35feeder1coal" },
+            cr35Feeder2Total: { $sum: "$cr35feeder2coal" },
+            cr36Feeder1Total: { $sum: "$cr36feeder1coal" },
+            cr36Feeder2Total: { $sum: "$cr36feeder2coal" },
+            cr37Feeder1Total: { $sum: "$cr37feeder1coal" },
+            cr37Feeder2Total: { $sum: "$cr37feeder2coal" },
+            cr38Feeder1Total: { $sum: "$cr38feeder1coal" },
+            cr38Feeder2Total: { $sum: "$cr38feeder2coal" },
+          },
+        },
+      ];
+
+      const result = await CrusherStatus.aggregate(pipeline);
+      /*const result = await CrusherStatus.aggregate([
         {
           $match: {
             date: { $gte: new Date(fromdate), $lte: new Date(todate) },
@@ -95,7 +176,7 @@ module.exports = {
             cr38Feeder2Total: { $sum: "$cr38feeder2coal" },
           },
         },
-      ]);
+      ]);*/
 
       if (!result.length) {
         return callback(

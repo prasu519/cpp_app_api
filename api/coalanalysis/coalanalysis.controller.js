@@ -76,18 +76,26 @@ module.exports = {
   coalAnalysisControllerAvgCI: (req, res) => {
     const fromdate = req.query.fromdate;
     const todate = req.query.todate;
+    const fromShift = req.query.fromshift;
+    const toShift = req.query.toshift;
 
-    coalAnalysisServiceAvgCI(fromdate, todate, (error, results) => {
-      if (error) {
-        return res.status(500).json({
-          success: 0,
-          message: error,
+    coalAnalysisServiceAvgCI(
+      fromdate,
+      fromShift,
+      todate,
+      toShift,
+      (error, results) => {
+        if (error) {
+          return res.status(500).json({
+            success: 0,
+            message: error,
+          });
+        }
+        return res.status(200).json({
+          success: 1,
+          data: results,
         });
       }
-      return res.status(200).json({
-        success: 1,
-        data: results,
-      });
-    });
+    );
   },
 };

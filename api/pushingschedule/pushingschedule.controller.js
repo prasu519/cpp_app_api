@@ -93,18 +93,26 @@ module.exports = {
   },
   pushingScheduleControllerTotPushings: (req, res) => {
     const fdate = req.query.fromdate;
+    const fshift = req.query.fromshift;
     const tdate = req.query.todate;
-    reclaimingServiceTotPushings(fdate, tdate, (error, results) => {
-      if (error) {
-        return res.status(500).json({
-          success: 0,
-          message: error,
+    const tshift = req.query.toshift;
+    reclaimingServiceTotPushings(
+      fdate,
+      fshift,
+      tdate,
+      tshift,
+      (error, results) => {
+        if (error) {
+          return res.status(500).json({
+            success: 0,
+            message: error,
+          });
+        }
+        return res.status(200).json({
+          success: 1,
+          data: results,
         });
       }
-      return res.status(200).json({
-        success: 1,
-        data: results,
-      });
-    });
+    );
   },
 };
