@@ -69,6 +69,30 @@ const crusherStatusSchema = mongoose.Schema({
   cr38feeder2coal: {
     type: Number,
   },
+  cr201status: {
+    type: String,
+  },
+  cr201feeder: {
+    type: String,
+  },
+  cr201feeder1coal: {
+    type: Number,
+  },
+  cr201feeder2coal: {
+    type: Number,
+  },
+  cr202status: {
+    type: String,
+  },
+  cr202feeder: {
+    type: String,
+  },
+  cr202feeder1coal: {
+    type: Number,
+  },
+  cr202feeder2coal: {
+    type: Number,
+  },
 });
 crusherStatusSchema.index({ date: 1, shift: 1 }, { unique: true });
 const CrusherStatus = mongoose.model("CrusherStatus", crusherStatusSchema);

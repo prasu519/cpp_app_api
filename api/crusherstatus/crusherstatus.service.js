@@ -48,6 +48,14 @@ module.exports = {
           cr38feeder: data.cr38feeder,
           cr38feeder1coal: data.cr38feeder1coal,
           cr38feeder2coal: data.cr38feeder2coal,
+          cr201status: data.cr201status,
+          cr201feeder: data.cr201feeder,
+          cr201feeder1coal: data.cr201feeder1coal,
+          cr201feeder2coal: data.cr201feeder2coal,
+          cr202status: data.cr202status,
+          cr202feeder: data.cr202feeder,
+          cr202feeder1coal: data.cr202feeder1coal,
+          cr202feeder2coal: data.cr202feeder2coal,
         },
         { new: true }
       );
@@ -150,6 +158,10 @@ module.exports = {
             cr37Feeder2Total: { $sum: "$cr37feeder2coal" },
             cr38Feeder1Total: { $sum: "$cr38feeder1coal" },
             cr38Feeder2Total: { $sum: "$cr38feeder2coal" },
+            cr201Feeder1Total: { $sum: "$cr201feeder1coal" },
+            cr201Feeder2Total: { $sum: "$cr201feeder2coal" },
+            cr202Feeder1Total: { $sum: "$cr202feeder1coal" },
+            cr202Feeder2Total: { $sum: "$cr202feeder2coal" },
           },
         },
       ];
@@ -196,6 +208,10 @@ module.exports = {
         cr37Feeder2Total,
         cr38Feeder1Total,
         cr38Feeder2Total,
+        cr201Feeder1Total,
+        cr201Feeder2Total,
+        cr202Feeder1Total,
+        cr202Feeder2Total,
       } = result[0];
       return callback(null, {
         cr34Feeder1Total,
@@ -208,6 +224,10 @@ module.exports = {
         cr37Feeder2Total,
         cr38Feeder1Total,
         cr38Feeder2Total,
+        cr201Feeder1Total,
+        cr201Feeder2Total,
+        cr202Feeder1Total,
+        cr202Feeder2Total,
       });
     } catch (error) {
       console.log(error);
