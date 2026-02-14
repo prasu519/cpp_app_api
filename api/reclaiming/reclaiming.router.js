@@ -7,6 +7,7 @@ const {
   reclaimingControllerTotRecl,
   reclaimingControllerByAllCoalNames,
   reclaimingControllerByAllCoalNamesCpp3,
+  reclaimingControllerExcel,
 } = require("./reclaiming.controller");
 
 const reclaimingRouter = require("express").Router();
@@ -21,4 +22,6 @@ reclaimingRouter.get(
   "/totByCoalNamesCpp3",
   reclaimingControllerByAllCoalNamesCpp3
 );
+reclaimingRouter.get("/reclaiminginexcel", reclaimingControllerExcel);
+
 module.exports = reclaimingRouter;

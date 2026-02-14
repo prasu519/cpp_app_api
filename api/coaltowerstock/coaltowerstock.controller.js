@@ -3,6 +3,7 @@ const {
   coaltowerstockServiceRead,
   coaltowerstockServiceUpdate,
   coaltowerstockServiceDelete,
+  coaltowerstocksCShiftServiceReadExcel,
 } = require("./coaltowerstock.service");
 
 module.exports = {
@@ -69,5 +70,30 @@ module.exports = {
         data: results,
       });
     });
+  },
+
+  coaltowerstocksCshiftControllerExcel: (req, res) => {
+    const fdate = req.query.fromdate;
+    const fshift = req.query.fromshift;
+    const tdate = req.query.todate;
+    const tshift = req.query.toshift;
+    coaltowerstocksCShiftServiceReadExcel(
+      fdate,
+      fshift,
+      tdate,
+      tshift,
+      (error, results) => {
+        if (error) {
+          return res.status(500).json({
+            success: 0,
+            message: error,
+          });
+        }
+        return res.status(200).json({
+          success: 1,
+          data: results,
+        });
+      }
+    );
   },
 };

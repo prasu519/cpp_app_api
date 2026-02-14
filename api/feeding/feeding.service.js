@@ -177,4 +177,125 @@ module.exports = {
       return callback(error);
     }
   },
+
+  feedingServiceExcel: async (
+    fromdate,
+    fromshift,
+    todate,
+    toshift,
+    callback
+  ) => {
+    try {
+      const shiftOrder = ["A", "B", "C"];
+      const startIdx = shiftOrder.indexOf(fromshift);
+      const endIdx = shiftOrder.indexOf(toshift);
+
+      if (startIdx === -1 || endIdx === -1) {
+        return callback(new Error("Invalid shift. Use A, B or C"));
+      }
+
+      // ================= DATE NORMALIZATION =================
+      const startDate = new Date(fromdate);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(todate);
+      endDate.setHours(23, 59, 59, 999);
+
+      // Same-day wrap (C → A)
+      if (fromdate === todate && startIdx > endIdx) {
+        endDate.setDate(endDate.getDate() + 1);
+      }
+
+      const shiftsFromStart = shiftOrder.slice(startIdx);
+      const shiftsToEnd = shiftOrder.slice(0, endIdx + 1);
+
+      // ================= MATCH CONDITION =================
+      let matchCondition;
+
+      if (fromdate === todate) {
+        // Same day
+        matchCondition = {
+          date: {
+            $gte: new Date(fromdate + "T00:00:00.000Z"),
+            $lte: new Date(fromdate + "T23:59:59.999Z"),
+          },
+          shift: { $in: shiftOrder.slice(startIdx, endIdx + 1) },
+        };
+      } else {
+        matchCondition = {
+          $or: [
+            {
+              date: {
+                $gte: new Date(fromdate + "T00:00:00.000Z"),
+                $lte: new Date(fromdate + "T23:59:59.999Z"),
+              },
+              shift: { $in: shiftsFromStart },
+            },
+            {
+              date: {
+                $gte: new Date(todate + "T00:00:00.000Z"),
+                $lte: new Date(todate + "T23:59:59.999Z"),
+              },
+              shift: { $in: shiftsToEnd },
+            },
+            {
+              date: {
+                $gt: new Date(fromdate + "T23:59:59.999Z"),
+                $lt: new Date(todate + "T00:00:00.000Z"),
+              },
+            },
+          ],
+        };
+      }
+
+      // ================= PIPELINE =================
+      const pipeline = [
+        { $match: matchCondition },
+        { $sort: { date: 1, shift: 1 } },
+
+        {
+          $group: {
+            _id: "$date",
+            rows: {
+              $push: {
+                date: {
+                  $dateToString: {
+                    format: "%d-%m-%Y",
+                    date: "$date",
+                  },
+                },
+                shift: "$shift",
+                ct1: "$ct1",
+                ct2: "$ct2",
+                ct3: "$ct3",
+                pathc: "$pathc",
+                total_feeding: "$total_feeding",
+              },
+            },
+          },
+        },
+
+        { $sort: { _id: 1 } },
+
+        {
+          $project: {
+            _id: 0,
+            rows: 1,
+          },
+        },
+      ];
+
+      const result = await Feeding.aggregate(pipeline);
+
+      if (!result.length) {
+        return callback(new Error("No feeding data found for given range"));
+      }
+
+      const finalOutput = result.map((d) => d.rows);
+      return callback(null, finalOutput);
+    } catch (error) {
+      console.error("Excel Service Error:", error);
+      return callback(error);
+    }
+  },
 };

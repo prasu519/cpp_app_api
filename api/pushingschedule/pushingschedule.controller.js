@@ -4,7 +4,8 @@ const {
   pushingScheduleServiceUpdate,
   pushingScheduleServiceDelete,
   pushingScheduleServiceReadDaywise,
-  reclaimingServiceTotPushings,
+  pushingScheduleServiceTotPushings,
+  pushingScheduleServiceExcel,
 } = require("../pushingschedule/pushingschedule.service");
 
 module.exports = {
@@ -96,7 +97,31 @@ module.exports = {
     const fshift = req.query.fromshift;
     const tdate = req.query.todate;
     const tshift = req.query.toshift;
-    reclaimingServiceTotPushings(
+    pushingScheduleServiceTotPushings(
+      fdate,
+      fshift,
+      tdate,
+      tshift,
+      (error, results) => {
+        if (error) {
+          return res.status(500).json({
+            success: 0,
+            message: error,
+          });
+        }
+        return res.status(200).json({
+          success: 1,
+          data: results,
+        });
+      }
+    );
+  },
+  pushingScheduleControllerExcel: (req, res) => {
+    const fdate = req.query.fromdate;
+    const fshift = req.query.fromshift;
+    const tdate = req.query.todate;
+    const tshift = req.query.toshift;
+    pushingScheduleServiceExcel(
       fdate,
       fshift,
       tdate,

@@ -7,6 +7,7 @@ const {
   reclaimingServiceTotalRecl,
   getTotalReclaimingByAllCoalNames,
   getTotalReclaimingByAllCoalNamesCpp3,
+  reclaimingServiceExcel,
 } = require("./reclaiming.service");
 
 module.exports = {
@@ -164,5 +165,29 @@ module.exports = {
         });
       }
     );
+  },
+  reclaimingControllerExcel: (req, res) => {
+    const fdate = req.query.fdate;
+    const fshift = req.query.fshift;
+    const tdate = req.query.tdate;
+    const tshift = req.query.tshift;
+
+    if (!fdate || !fshift || !tdate || !tshift) {
+      return res.status(400).json({
+        success: 0,
+        message: "fdate,fshift,tdate,tshift required",
+      });
+    }
+
+    reclaimingServiceExcel(fdate, fshift, tdate, tshift, (err, filePath) => {
+      if (err) {
+        return res.status(500).json({
+          success: 0,
+          message: err.message,
+        });
+      }
+
+      return res.download(filePath);
+    });
   },
 };

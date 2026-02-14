@@ -69,7 +69,7 @@ module.exports = {
       return callback(error);
     }
   },
-  reclaimingServiceTotPushings: async (
+  pushingScheduleServiceTotPushings: async (
     fromdate,
     fromshift,
     todate,
@@ -168,6 +168,132 @@ module.exports = {
     } catch (error) {
       console.log(error);
       return callback(error);
+    }
+  },
+
+  pushingScheduleServiceExcel: async (
+    fromdate,
+    fromshift,
+    todate,
+    toshift,
+    callback
+  ) => {
+    try {
+      // ---------- validate shifts ----------
+      const shiftOrder = ["A", "B", "C"];
+      const startIdx = shiftOrder.indexOf(fromshift);
+      const endIdx = shiftOrder.indexOf(toshift);
+      if (startIdx === -1 || endIdx === -1) {
+        return callback(new Error("Invalid shift. Use 'A', 'B' or 'C'."), null);
+      }
+
+      // ---------- normalize dates ----------
+
+      // convert to exact UTC date (Mongo stored in UTC)
+      const startDate = new Date(fromdate + "T00:00:00.000Z");
+      const endDate = new Date(todate + "T00:00:00.000Z");
+
+      // next day for inclusive query
+      const nextDay = new Date(endDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      // wrap case (same day but A->C crossing)
+      if (startDate.getTime() === endDate.getTime() && startIdx > endIdx) {
+        endDate.setDate(endDate.getDate() + 1);
+      }
+
+      const shiftsFromStart = shiftOrder.slice(startIdx);
+      const shiftsToEnd = shiftOrder.slice(0, endIdx + 1);
+      const allShifts = shiftOrder;
+
+      let matchCondition;
+
+      if (startDate.getTime() === endDate.getTime()) {
+        matchCondition = {
+          date: {
+            $gte: startDate,
+            $lt: nextDay,
+          },
+          shift: { $in: shiftOrder.slice(startIdx, endIdx + 1) },
+        };
+      } else {
+        matchCondition = {
+          $or: [
+            // start day
+            {
+              date: {
+                $gte: startDate,
+                $lt: new Date(startDate.getTime() + 86400000),
+              },
+              shift: { $in: shiftsFromStart },
+            },
+
+            // end day
+            {
+              date: {
+                $gte: endDate,
+                $lt: nextDay,
+              },
+              shift: { $in: shiftsToEnd },
+            },
+
+            // middle days
+            {
+              date: {
+                $gt: startDate,
+                $lt: endDate,
+              },
+              shift: { $in: allShifts },
+            },
+          ],
+        };
+      }
+
+      // ----------- FETCH DATA -------------
+      const data = await PushingSchedule.find(matchCondition)
+        .sort({ date: 1, shift: 1 })
+        .lean();
+
+      if (!data.length) {
+        return callback(new Error("No pushings found for given range"), null);
+      }
+
+      // ---------- format date + output ----------
+      const formatted = data.map((item) => {
+        const d = new Date(item.date);
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+
+        return {
+          date: `${day}-${month}-${year}`,
+          shift: item.shift,
+          bat1: item.bat1 || 0,
+          bat2: item.bat2 || 0,
+          bat3: item.bat3 || 0,
+          bat4: item.bat4 || 0,
+          bat5: item.bat5 || 0,
+          total_pushings: item.total_pushings || 0,
+        };
+      });
+
+      // -------- GROUP BY DATE ----------
+      const groupedByDate = {};
+
+      formatted.forEach((item) => {
+        if (!groupedByDate[item.date]) {
+          groupedByDate[item.date] = [];
+        }
+        groupedByDate[item.date].push(item);
+      });
+
+      // convert object → array format
+      const finalOutput = Object.values(groupedByDate);
+
+      return callback(null, finalOutput);
+    } catch (error) {
+      console.log(error);
+      return callback(error, null);
     }
   },
 };
