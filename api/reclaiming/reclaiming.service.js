@@ -177,7 +177,26 @@ module.exports = {
         },
       ];
       const result = await Reclaiming.aggregate(pipeline);
-
+      //console.log(fromdate.todate);
+      /* const totalRecl = await Reclaiming.aggregate([
+        {
+          $match: {
+            date: { $gte: new Date(fromdate), $lte: new Date(todate) },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totCC49Recl: { $sum: "$cc49recl" },
+            totCC50Recl: { $sum: "$cc50recl" },
+            totCC126Recl: { $sum: "$cc126recl" },
+            totCpp1Recl: { $sum: "$total_reclaiming" },
+            totCpp3Recl: { $sum: "$cpp3total_reclaiming" },
+            totPathARecl: { $sum: "$patharecl" },
+            totPathBRecl: { $sum: "$pathbrecl" },
+          },
+        },
+      ]);*/
       if (!result.length) {
         return callback(
           new Error("No Total Reclaiming found for the given date range")
@@ -321,6 +340,61 @@ module.exports = {
       ];
       const totals = await Reclaiming.aggregate(pipeline);
 
+      /*const totals = await Reclaiming.aggregate([
+        {
+          $match: {
+            date: { $gte: new Date(fromdate), $lte: new Date(todate) },
+          },
+        },
+        {
+          $project: {
+            coalEntries: {
+              $concatArrays: [
+                [
+                  { name: "$coal1name", recl: "$coal1recl" },
+                  { name: "$coal2name", recl: "$coal2recl" },
+                  { name: "$coal3name", recl: "$coal3recl" },
+                  { name: "$coal4name", recl: "$coal4recl" },
+                  { name: "$coal5name", recl: "$coal5recl" },
+                  { name: "$coal6name", recl: "$coal6recl" },
+                  { name: "$coal7name", recl: "$coal7recl" },
+                  { name: "$coal8name", recl: "$coal8recl" },
+
+                  { name: "$excoal1name", recl: "$excoal1recl" },
+                  { name: "$excoal2name", recl: "$excoal2recl" },
+                  { name: "$excoal3name", recl: "$excoal3recl" },
+                  { name: "$excoal4name", recl: "$excoal4recl" },
+                  { name: "$excoal5name", recl: "$excoal5recl" },
+                  { name: "$excoal6name", recl: "$excoal6recl" },
+                  { name: "$excoal7name", recl: "$excoal7recl" },
+                  { name: "$excoal8name", recl: "$excoal8recl" },
+                ],
+              ],
+            },
+          },
+        },
+        { $unwind: "$coalEntries" },
+        {
+          $match: {
+            "coalEntries.name": { $nin: [null, ""] }, // remove null names and empty string
+          },
+        },
+        {
+          $group: {
+            _id: "$coalEntries.name",
+            totalRecl: { $sum: "$coalEntries.recl" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            coalName: "$_id",
+            totalReclaiming: "$totalRecl",
+          },
+        },
+      ]);*/
+
+      // Convert array to object: { MN: 5000, BWS: 2000, ... }
       const result = {};
       totals.forEach(({ coalName, totalReclaiming }) => {
         result[coalName] = totalReclaiming;
@@ -435,7 +509,50 @@ module.exports = {
         },
       ];
       const totals = await Reclaiming.aggregate(pipeline);
-
+      /*const totals = await Reclaiming.aggregate([
+        {
+          $match: {
+            date: { $gte: new Date(fromdate), $lte: new Date(todate) },
+          },
+        },
+        {
+          $project: {
+            coalEntries: {
+              $concatArrays: [
+                [
+                  { name: "$cpp3coal1name", recl: "$cpp3coal1recl" },
+                  { name: "$cpp3coal2name", recl: "$cpp3coal2recl" },
+                  { name: "$cpp3coal3name", recl: "$cpp3coal3recl" },
+                  { name: "$cpp3coal4name", recl: "$cpp3coal4recl" },
+                  { name: "$cpp3coal5name", recl: "$cpp3coal5recl" },
+                  { name: "$cpp3coal6name", recl: "$cpp3coal6recl" },
+                ],
+              ],
+            },
+          },
+        },
+        { $unwind: "$coalEntries" },
+        {
+          $match: {
+            "coalEntries.name": { $nin: [null, ""] }, // remove null names and empty string
+          },
+        },
+        {
+          $group: {
+            _id: { $toUpper: "$coalEntries.name" }, // Normalize to UPPERCASE
+            totalRecl: { $sum: "$coalEntries.recl" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            coalName: "$_id",
+            totalReclaiming: "$totalRecl",
+          },
+        },
+      ]);
+      */
+      // Convert array to object: { MN: 5000, BWS: 2000, ... }
       const result = {};
       totals.forEach(({ coalName, totalReclaiming }) => {
         result[coalName] = totalReclaiming;
@@ -447,6 +564,257 @@ module.exports = {
       return callback(error);
     }
   },
+  /* reclaimingServiceExcel: async (
+    fromdate,
+    fromshift,
+    todate,
+    toshift,
+    callback
+  ) => {
+    try {
+      const shiftOrder = ["A", "B", "C"];
+      const startIdx = shiftOrder.indexOf(fromshift);
+      const endIdx = shiftOrder.indexOf(toshift);
+
+      if (startIdx === -1 || endIdx === -1) {
+        return callback(new Error("Invalid shift"));
+      }
+
+      const startDate = new Date(fromdate);
+      const endDate = new Date(todate);
+
+      if (startDate.getTime() === endDate.getTime() && startIdx > endIdx) {
+        endDate.setDate(endDate.getDate() + 1);
+      }
+
+      const shiftsFromStart = shiftOrder.slice(startIdx);
+      const shiftsToEnd = shiftOrder.slice(0, endIdx + 1);
+      const allShifts = shiftOrder;
+
+      let matchCondition;
+
+      if (startDate.getTime() === endDate.getTime()) {
+        matchCondition = {
+          date: startDate,
+          shift: { $in: shiftOrder.slice(startIdx, endIdx + 1) },
+        };
+      } else {
+        matchCondition = {
+          $or: [
+            { date: startDate, shift: { $in: shiftsFromStart } },
+            { date: endDate, shift: { $in: shiftsToEnd } },
+            {
+              date: { $gt: startDate, $lt: endDate },
+              shift: { $in: allShifts },
+            },
+          ],
+        };
+      }
+
+      const records = await Reclaiming.find(matchCondition).sort({
+        date: 1,
+        shift: 1,
+      });
+
+      if (!records.length) {
+        return callback(new Error("No data found"));
+      }
+
+      const ExcelJS = require("exceljs");
+      const path = require("path");
+      const fs = require("fs");
+
+      const norm = (n) => (n ? n.toString().trim().toUpperCase() : "");
+
+      // ===== CPP1 HEADERS =====
+      let cpp1Set = new Set();
+      records.forEach((doc) => {
+        for (let i = 1; i <= 8; i++) {
+          if (doc[`coal${i}name`]) cpp1Set.add(norm(doc[`coal${i}name`]));
+          if (doc[`excoal${i}name`]) cpp1Set.add(norm(doc[`excoal${i}name`]));
+        }
+      });
+      const cpp1Names = Array.from(cpp1Set);
+
+      // ===== CPP3 HEADERS =====
+      let cpp3Set = new Set();
+      records.forEach((doc) => {
+        for (let i = 1; i <= 6; i++) {
+          if (doc[`cpp3coal${i}name`])
+            cpp3Set.add(norm(doc[`cpp3coal${i}name`]));
+        }
+      });
+      const cpp3Names = Array.from(cpp3Set);
+
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("RECLAIMING");
+
+      // ===== TITLE =====
+      sheet.mergeCells("A1:Z1");
+      sheet.getCell("A1").value = "RECLAIMING SUMMARY";
+      sheet.getCell("A1").font = { size: 16, bold: true };
+      sheet.getCell("A1").alignment = { horizontal: "center" };
+
+      // ===== SECTION HEADERS =====
+      const cpp1End = 2 + cpp1Names.length + 6;
+      sheet.mergeCells(2, 1, 2, cpp1End);
+      sheet.getCell("A2").value = "CPP-1";
+      sheet.getCell("A2").alignment = { horizontal: "center" };
+      sheet.getCell("A2").font = { bold: true };
+
+      sheet.mergeCells(2, cpp1End + 1, 2, cpp1End + cpp3Names.length + 6);
+      sheet.getCell(2, cpp1End + 1).value = "CPP-3";
+      sheet.getCell(2, cpp1End + 1).alignment = { horizontal: "center" };
+      sheet.getCell(2, cpp1End + 1).font = { bold: true };
+
+      // ===== HEADER =====
+      let headers = ["DATE", "SHIFT"];
+      cpp1Names.forEach((n) => headers.push(n));
+
+      headers.push(
+        "TOTAL",
+        "Y-4",
+        "Y-4A",
+        "Y-127",
+        "CPP1 TOTAL",
+        "DAY TOTAL",
+        "",
+        ""
+      );
+
+      cpp3Names.forEach((n) => headers.push(n));
+
+      headers.push("CPP3 TOTAL", "PATH-A", "PATH-B", "CPP3 TOTAL", "DAY TOTAL");
+
+      sheet.addRow(headers);
+
+      const headerRow = sheet.getRow(3);
+      headerRow.font = { bold: true };
+      headerRow.alignment = { horizontal: "center", vertical: "middle" };
+
+      // ===== ORANGE HEADER COLOR =====
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFD966" },
+        };
+      });
+
+      // ===== GROUP BY DATE =====
+      const grouped = {};
+      records.forEach((r) => {
+        const d = new Date(r.date).toISOString().split("T")[0];
+        if (!grouped[d]) grouped[d] = [];
+        grouped[d].push(r);
+      });
+
+      let rowIndex = 4;
+      let grandCpp1 = 0;
+      let grandCpp3 = 0;
+
+      for (const date in grouped) {
+        const rows = grouped[date];
+        let startRow = rowIndex;
+
+        let dayCpp1 = 0;
+        let dayCpp3 = 0;
+
+        for (let i = 0; i < rows.length; i++) {
+          const doc = rows[i];
+
+          let map = {};
+          for (let c = 1; c <= 8; c++) {
+            map[norm(doc[`coal${c}name`])] = doc[`coal${c}recl`] || 0;
+            map[norm(doc[`excoal${c}name`])] = doc[`excoal${c}recl`] || 0;
+          }
+
+          let map3 = {};
+          for (let c = 1; c <= 6; c++) {
+            map3[norm(doc[`cpp3coal${c}name`])] = doc[`cpp3coal${c}recl`] || 0;
+          }
+
+          let cpp1Vals = [];
+          cpp1Names.forEach((n) => cpp1Vals.push(map[n] || ""));
+
+          let cpp3Vals = [];
+          cpp3Names.forEach((n) => cpp3Vals.push(map3[n] || ""));
+
+          const cpp1Total = doc.total_reclaiming || 0;
+          const cpp3Total = doc.cpp3total_reclaiming || 0;
+
+          dayCpp1 += cpp1Total;
+          dayCpp3 += cpp3Total;
+
+          grandCpp1 += cpp1Total;
+          grandCpp3 += cpp3Total;
+
+          sheet.addRow([
+            date,
+            doc.shift,
+            ...cpp1Vals,
+            cpp1Total || "",
+            doc.cc50recl || "",
+            doc.cc49recl || "",
+            doc.cc126recl || "",
+            cpp1Total || "",
+            "",
+            "",
+            "",
+            ...cpp3Vals,
+            cpp3Total || "",
+            doc.patharecl || "",
+            doc.pathbrecl || "",
+            cpp3Total || "",
+            "",
+          ]);
+
+          rowIndex++;
+        }
+
+        // ===== MERGE DATE CELL =====
+        sheet.mergeCells(`A${startRow}:A${rowIndex - 1}`);
+        sheet.getCell(`A${startRow}`).alignment = {
+          vertical: "middle",
+          horizontal: "center",
+        };
+
+        // ===== DAY TOTAL =====
+        sheet.getCell(rowIndex - 1, cpp1Names.length + 8).value = dayCpp1;
+        sheet.getCell(rowIndex - 1, headers.length).value = dayCpp3;
+      }
+
+      // ===== GRAND TOTAL ROW =====
+      sheet.addRow([]);
+      sheet.addRow(["", "GRAND TOTAL", "", "", "", grandCpp1]);
+      sheet.getCell(`B${rowIndex + 1}`).font = { bold: true };
+
+      // ===== BORDERS =====
+      sheet.eachRow((row) => {
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+          };
+        });
+      });
+
+      sheet.columns.forEach((c) => (c.width = 13));
+
+      const dir = path.join(__dirname, "../excel");
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+
+      const filePath = path.join(dir, "Reclaiming_Report.xlsx");
+      await workbook.xlsx.writeFile(filePath);
+
+      return callback(null, filePath);
+    } catch (err) {
+      console.log(err);
+      return callback(err);
+    }
+  },*/
 
   reclaimingServiceExcel: async (
     fromdate,
@@ -633,8 +1001,6 @@ module.exports = {
       for (const date in grouped) {
         const rows = grouped[date];
         let startRow = rowIndex;
-        let dayCpp1Total = 0;
-        let dayCpp3Total = 0;
 
         for (let i = 0; i < rows.length; i++) {
           const doc = rows[i];
@@ -670,9 +1036,6 @@ module.exports = {
           grandCpp1 += cpp1Total;
           grandCpp3 += cpp3Total;
 
-          dayCpp1Total += cpp1Total;
-          dayCpp3Total += cpp3Total;
-
           // 🟢 accumulate Y totals
           grandY4 += doc.cc50recl || 0;
           grandY4A += doc.cc49recl || 0;
@@ -686,25 +1049,19 @@ module.exports = {
             date,
             doc.shift,
             ...cpp1Vals,
-
-            cpp1Total || "", // CPP1 TOTAL
+            cpp1Total || "",
             doc.cc50recl || "",
             doc.cc49recl || "",
             doc.cc126recl || "",
-            cpp1Total || "", // CPP1 TOTAL AGAIN
-
-            "", // ❌ REMOVE SHIFT DAY TOTAL (CPP1)
-
-            "", // GAP
-
+            cpp1Total || "",
+            cpp1Total || "",
+            "",
             ...cpp3Vals,
-
-            cpp3Total || "", // CPP3 TOTAL
+            cpp3Total || "",
             doc.patharecl || "",
             doc.pathbrecl || "",
-            cpp3Total || "", // CPP3 TOTAL AGAIN
-
-            "", // ❌ REMOVE SHIFT DAY TOTAL (CPP3)
+            cpp3Total || "",
+            cpp3Total || "",
           ];
 
           sheet.addRow(row);
@@ -716,42 +1073,6 @@ module.exports = {
           vertical: "middle",
           horizontal: "center",
         };
-        // ===== CPP1 DAY TOTAL MERGE =====
-        const dayTotalCpp1Col = 2 + cpp1Names.length + 5;
-
-        sheet.mergeCells(
-          startRow,
-          dayTotalCpp1Col,
-          rowIndex - 1,
-          dayTotalCpp1Col
-        );
-
-        sheet.getCell(startRow, dayTotalCpp1Col).value = dayCpp1Total;
-        sheet.getCell(startRow, dayTotalCpp1Col).alignment = {
-          vertical: "middle",
-          horizontal: "center",
-        };
-        sheet.getCell(startRow, dayTotalCpp1Col).font = { bold: true };
-
-        // ===== CPP3 DAY TOTAL MERGE =====
-        const gapCol = dayTotalCpp1Col + 1;
-        const cpp3Start = gapCol + 1;
-
-        const dayTotalCpp3Col = cpp3Start + cpp3Names.length + 4;
-
-        sheet.mergeCells(
-          startRow,
-          dayTotalCpp3Col,
-          rowIndex - 1,
-          dayTotalCpp3Col
-        );
-
-        sheet.getCell(startRow, dayTotalCpp3Col).value = dayCpp3Total;
-        sheet.getCell(startRow, dayTotalCpp3Col).alignment = {
-          vertical: "middle",
-          horizontal: "center",
-        };
-        sheet.getCell(startRow, dayTotalCpp3Col).font = { bold: true };
       }
 
       // ===== GRAND TOTAL =====
