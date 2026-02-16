@@ -815,6 +815,21 @@ module.exports = {
       return callback(err);
     }
   },*/
+  /* for (const date in grouped) {
+    const rows = grouped[date];
+    let startRow = rowIndex;*/
+  /*const cpp1Total = doc.total_reclaiming || 0;
+const cpp3Total = doc.cpp3total_reclaiming || 0;
+
+grandCpp1 += cpp1Total;
+grandCpp3 += cpp3Total;
+*/
+  /*cpp1Total || "",   // day total cpp1
+...
+cpp3Total || "",   // day total cpp3
+*/
+  /*sheet.mergeCells(`A${startRow}:A${rowIndex - 1}`);
+   */
 
   reclaimingServiceExcel: async (
     fromdate,
@@ -1001,6 +1016,8 @@ module.exports = {
       for (const date in grouped) {
         const rows = grouped[date];
         let startRow = rowIndex;
+        let dayCpp1Total = 0;
+        let dayCpp3Total = 0;
 
         for (let i = 0; i < rows.length; i++) {
           const doc = rows[i];
@@ -1036,6 +1053,9 @@ module.exports = {
           grandCpp1 += cpp1Total;
           grandCpp3 += cpp3Total;
 
+          dayCpp1Total += cpp1Total;
+          dayCpp3Total += cpp3Total;
+
           // 🟢 accumulate Y totals
           grandY4 += doc.cc50recl || 0;
           grandY4A += doc.cc49recl || 0;
@@ -1049,19 +1069,25 @@ module.exports = {
             date,
             doc.shift,
             ...cpp1Vals,
-            cpp1Total || "",
+
+            cpp1Total || "", // CPP1 TOTAL
             doc.cc50recl || "",
             doc.cc49recl || "",
             doc.cc126recl || "",
-            cpp1Total || "",
-            cpp1Total || "",
-            "",
+            cpp1Total || "", // CPP1 TOTAL AGAIN
+
+            "", // ❌ REMOVE SHIFT DAY TOTAL (CPP1)
+
+            "", // GAP
+
             ...cpp3Vals,
-            cpp3Total || "",
+
+            cpp3Total || "", // CPP3 TOTAL
             doc.patharecl || "",
             doc.pathbrecl || "",
-            cpp3Total || "",
-            cpp3Total || "",
+            cpp3Total || "", // CPP3 TOTAL AGAIN
+
+            "", // ❌ REMOVE SHIFT DAY TOTAL (CPP3)
           ];
 
           sheet.addRow(row);
@@ -1073,6 +1099,42 @@ module.exports = {
           vertical: "middle",
           horizontal: "center",
         };
+        // ===== CPP1 DAY TOTAL MERGE =====
+        const dayTotalCpp1Col = 2 + cpp1Names.length + 5;
+
+        sheet.mergeCells(
+          startRow,
+          dayTotalCpp1Col,
+          rowIndex - 1,
+          dayTotalCpp1Col
+        );
+
+        sheet.getCell(startRow, dayTotalCpp1Col).value = dayCpp1Total;
+        sheet.getCell(startRow, dayTotalCpp1Col).alignment = {
+          vertical: "middle",
+          horizontal: "center",
+        };
+        sheet.getCell(startRow, dayTotalCpp1Col).font = { bold: true };
+
+        // ===== CPP3 DAY TOTAL MERGE =====
+        const gapCol = dayTotalCpp1Col + 1;
+        const cpp3Start = gapCol + 1;
+
+        const dayTotalCpp3Col = cpp3Start + cpp3Names.length + 4;
+
+        sheet.mergeCells(
+          startRow,
+          dayTotalCpp3Col,
+          rowIndex - 1,
+          dayTotalCpp3Col
+        );
+
+        sheet.getCell(startRow, dayTotalCpp3Col).value = dayCpp3Total;
+        sheet.getCell(startRow, dayTotalCpp3Col).alignment = {
+          vertical: "middle",
+          horizontal: "center",
+        };
+        sheet.getCell(startRow, dayTotalCpp3Col).font = { bold: true };
       }
 
       // ===== GRAND TOTAL =====
