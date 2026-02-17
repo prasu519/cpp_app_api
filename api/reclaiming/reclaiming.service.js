@@ -521,65 +521,42 @@ module.exports = {
 
       const norm = (n) => (n ? n.toString().trim().toUpperCase() : "");
 
-      // ===== CPP1 dynamic =====
+      // ===== coal sets =====
       let cpp1Set = new Set();
+      let cpp3Set = new Set();
+
       records.forEach((doc) => {
         for (let i = 1; i <= 8; i++) {
           if (doc[`coal${i}name`]) cpp1Set.add(norm(doc[`coal${i}name`]));
           if (doc[`excoal${i}name`]) cpp1Set.add(norm(doc[`excoal${i}name`]));
         }
-      });
-      const cpp1Names = Array.from(cpp1Set).sort();
-
-      // ===== CPP3 dynamic =====
-      let cpp3Set = new Set();
-      records.forEach((doc) => {
         for (let i = 1; i <= 6; i++) {
           if (doc[`cpp3coal${i}name`])
             cpp3Set.add(norm(doc[`cpp3coal${i}name`]));
         }
       });
+
+      const cpp1Names = Array.from(cpp1Set).sort();
       const cpp3Names = Array.from(cpp3Set).sort();
 
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("RECLAIMING");
 
-      // ===== PRINT SETTINGS (LANDSCAPE OFFICIAL) =====
-      sheet.pageSetup = {
-        paperSize: 9, // A4
-        orientation: "landscape",
-        fitToPage: true,
-        fitToWidth: 1,
-        fitToHeight: 1,
-        horizontalCentered: true,
-        verticalCentered: false,
-        margins: {
-          left: 0.3,
-          right: 0.3,
-          top: 0.5,
-          bottom: 0.5,
-          header: 0.2,
-          footer: 0.2,
-        },
-      };
+      sheet.pageSetup = { paperSize: 9, orientation: "landscape" };
 
-      sheet.views = [{ state: "frozen", xSplit: 2, ySplit: 3 }];
-
-      // ===== TITLE =====
+      // ===== title =====
       const monthName = new Date(fromdate)
         .toLocaleString("default", { month: "long" })
         .toUpperCase();
 
-      sheet.mergeCells("A1:Z1");
-      const titleCell = sheet.getCell("A1");
-      titleCell.value = `RECLAIMING SUMMARY ${monthName} MONTH`;
-      titleCell.font = { bold: true, size: 16 };
-      titleCell.alignment = { horizontal: "center", vertical: "middle" };
+      sheet.mergeCells("A1:AZ1");
+      sheet.getCell("A1").value = `RECLAIMING SUMMARY ${monthName} MONTH`;
+      sheet.getCell("A1").font = { bold: true, size: 16 };
+      sheet.getCell("A1").alignment = { horizontal: "center" };
 
-      // ===== HEADERS =====
+      // ===== headers =====
       let headers = ["DATE", "SHIFT"];
       cpp1Names.forEach((c) => headers.push(c));
-
       headers.push("TOTAL", "Y-4", "Y-4A", "Y-127", "CPP1 TOTAL", "DAY TOTAL");
       headers.push("");
       cpp3Names.forEach((c) => headers.push(c));
@@ -590,30 +567,39 @@ module.exports = {
 
       const headerRow = sheet.getRow(3);
 
-      // ===== HEADER STYLE (PERFECT ALIGNMENT) =====
-      headerRow.eachCell((c) => {
-        c.font = { bold: true, size: 11 };
-        c.alignment = {
-          horizontal: "center",
-          vertical: "middle",
-          wrapText: true,
-        };
+      // ===== SECTION BORDER INDEX =====
+      const dividerCol = headers.indexOf("") + 1;
 
-        c.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFE7E6E6" },
-        };
+      headerRow.eachCell((c, col) => {
+        c.font = { bold: true };
+        c.alignment = { horizontal: "center", vertical: "middle" };
 
         c.border = {
           top: { style: "thin" },
-          left: { style: "thin" },
           bottom: { style: "medium" },
-          right: { style: "thin" },
+          left: { style: "thin" },
+          right:
+            col === dividerCol
+              ? { style: "thick" } // divider right
+              : { style: "thin" },
         };
       });
 
-      // ===== GROUP =====
+      // ===== totals storage separate =====
+      let grandCpp1 = {};
+      let grandCpp3 = {};
+
+      cpp1Names.forEach((c) => (grandCpp1[c] = 0));
+      cpp3Names.forEach((c) => (grandCpp3[c] = 0));
+
+      let grandY4 = 0,
+        grandY4A = 0,
+        grandY127 = 0,
+        grandPathA = 0,
+        grandPathB = 0;
+
+      let rowIndex = 4;
+
       const grouped = {};
       records.forEach((r) => {
         const d = new Date(r.date).toISOString().split("T")[0];
@@ -621,15 +607,12 @@ module.exports = {
         grouped[d].push(r);
       });
 
-      let rowIndex = 4;
-      let grandCpp1 = 0;
-      let grandCpp3 = 0;
-
       for (const date in grouped) {
         const rows = grouped[date];
         let startRow = rowIndex;
-        let dayTotalCpp1 = 0;
-        let dayTotalCpp3 = 0;
+
+        let dayCpp1 = 0;
+        let dayCpp3 = 0;
 
         for (const doc of rows) {
           let map = {};
@@ -643,144 +626,133 @@ module.exports = {
             map3[norm(doc[`cpp3coal${i}name`])] = doc[`cpp3coal${i}recl`] || 0;
           }
 
-          let cpp1Vals = cpp1Names.map((n) => map[n] || "");
-          let cpp3Vals = cpp3Names.map((n) => map3[n] || "");
+          let cpp1Vals = cpp1Names.map((n) => map[n] || 0);
+          let cpp3Vals = cpp3Names.map((n) => map3[n] || 0);
 
-          const cpp1Total = doc.total_reclaiming || 0;
-          const cpp3Total = doc.cpp3total_reclaiming || 0;
+          cpp1Names.forEach((c, i) => (grandCpp1[c] += cpp1Vals[i]));
+          cpp3Names.forEach((c, i) => (grandCpp3[c] += cpp3Vals[i]));
 
-          dayTotalCpp1 += cpp1Total;
-          dayTotalCpp3 += cpp3Total;
-          grandCpp1 += cpp1Total;
-          grandCpp3 += cpp3Total;
+          grandY4 += doc.cc50recl || 0;
+          grandY4A += doc.cc49recl || 0;
+          grandY127 += doc.cc126recl || 0;
+          grandPathA += doc.patharecl || 0;
+          grandPathB += doc.pathbrecl || 0;
 
-          let row = [
+          dayCpp1 += doc.total_reclaiming || 0;
+          dayCpp3 += doc.cpp3total_reclaiming || 0;
+
+          const row = [
             date,
             doc.shift,
             ...cpp1Vals,
-            cpp1Total,
-            doc.cc50recl || "",
-            doc.cc49recl || "",
-            doc.cc126recl || "",
-            cpp1Total,
+            doc.total_reclaiming || 0,
+            doc.cc50recl || 0,
+            doc.cc49recl || 0,
+            doc.cc126recl || 0,
+            doc.total_reclaiming || 0,
             "",
             "",
             ...cpp3Vals,
-            cpp3Total,
-            doc.patharecl || "",
-            doc.pathbrecl || "",
-            cpp3Total,
+            doc.cpp3total_reclaiming || 0,
+            doc.patharecl || 0,
+            doc.pathbrecl || 0,
+            doc.cpp3total_reclaiming || 0,
             "",
           ];
 
-          const newRow = sheet.addRow(row);
+          const r = sheet.addRow(row);
 
-          // row borders like plant sheet
-          newRow.eachCell((cell) => {
+          r.eachCell((cell, col) => {
+            cell.alignment = { horizontal: "center" };
             cell.border = {
+              left: { style: "thin" },
+              right:
+                col === dividerCol ? { style: "thick" } : { style: "thin" },
               top: { style: "hair" },
-              left: { style: "hair" },
               bottom: { style: "hair" },
-              right: { style: "hair" },
             };
-            cell.alignment = { horizontal: "center", vertical: "middle" };
           });
 
           rowIndex++;
         }
 
-        // merge date
         sheet.mergeCells(`A${startRow}:A${rowIndex - 1}`);
-        sheet.getCell(`A${startRow}`).alignment = {
-          vertical: "middle",
-          horizontal: "center",
-        };
 
-        // ===== find day total columns =====
-        let cpp1DayColIndex = null;
-        let cpp3DayColIndex = null;
-        let gapPassed = false;
+        // ===== DAY TOTAL FILL =====
+        const cpp1DayCol = headers.indexOf("DAY TOTAL") + 1;
+        const cpp3DayCol = headers.lastIndexOf("DAY TOTAL") + 1;
 
-        headerRow.eachCell((cell, colNumber) => {
-          const val = cell.value;
-          if (val === "" && !gapPassed) {
-            gapPassed = true;
-            return;
-          }
-          if (val === "DAY TOTAL" && !cpp1DayColIndex) {
-            cpp1DayColIndex = colNumber;
-            return;
-          }
-          if (val === "DAY TOTAL" && gapPassed) {
-            cpp3DayColIndex = colNumber;
-          }
-        });
+        sheet.mergeCells(
+          `${sheet.getColumn(cpp1DayCol).letter}${startRow}:${
+            sheet.getColumn(cpp1DayCol).letter
+          }${rowIndex - 1}`
+        );
+        sheet.getCell(
+          `${sheet.getColumn(cpp1DayCol).letter}${startRow}`
+        ).value = dayCpp1;
 
-        if (cpp1DayColIndex) {
-          const colLetter = sheet.getColumn(cpp1DayColIndex).letter;
-          sheet.mergeCells(
-            `${colLetter}${startRow}:${colLetter}${rowIndex - 1}`
-          );
-          const cell = sheet.getCell(`${colLetter}${startRow}`);
-          cell.value = dayTotalCpp1 || "";
-          cell.font = { bold: true };
-          cell.alignment = { vertical: "middle", horizontal: "center" };
-        }
-
-        if (cpp3DayColIndex) {
-          const colLetter3 = sheet.getColumn(cpp3DayColIndex).letter;
-          sheet.mergeCells(
-            `${colLetter3}${startRow}:${colLetter3}${rowIndex - 1}`
-          );
-          const cell3 = sheet.getCell(`${colLetter3}${startRow}`);
-          cell3.value = dayTotalCpp3 || "";
-          cell3.font = { bold: true };
-          cell3.alignment = { vertical: "middle", horizontal: "center" };
-        }
+        sheet.mergeCells(
+          `${sheet.getColumn(cpp3DayCol).letter}${startRow}:${
+            sheet.getColumn(cpp3DayCol).letter
+          }${rowIndex - 1}`
+        );
+        sheet.getCell(
+          `${sheet.getColumn(cpp3DayCol).letter}${startRow}`
+        ).value = dayCpp3;
       }
 
-      // ===== GRAND TOTAL ROW (DOUBLE BORDER OFFICIAL) =====
-      const grandRow = sheet.addRow([]);
-      const lastRowIndex = grandRow.number;
+      // ===== GRAND TOTAL ROW =====
+      const gRow = sheet.addRow([]);
+      const g = gRow.number;
+      sheet.getCell(`A${g}`).value = "GRAND TOTAL";
+      sheet.getCell(`A${g}`).font = { bold: true };
 
-      sheet.getCell(`A${lastRowIndex}`).value = "GRAND TOTAL";
-      sheet.getCell(`A${lastRowIndex}`).font = { bold: true };
-
-      headerRow.eachCell((cell, col) => {
-        const header = cell.value;
-
-        if (header === "DAY TOTAL") {
-          const colLetter = sheet.getColumn(col).letter;
-          const gcell = sheet.getCell(`${colLetter}${lastRowIndex}`);
-
-          if (!gcell.value) {
-            if (!sheet.getCell(`${colLetter}${lastRowIndex}`).value)
-              gcell.value = grandCpp1 || grandCpp3;
-          }
-
-          gcell.font = { bold: true };
-
-          // double border
-          gcell.border = {
-            top: { style: "double" },
-            bottom: { style: "double" },
-            left: { style: "double" },
-            right: { style: "double" },
-          };
-        }
+      // CPP1 coal totals
+      cpp1Names.forEach((c, i) => {
+        sheet.getCell(g, 3 + i).value = grandCpp1[c];
       });
 
-      // ===== AUTO COLUMN WIDTH =====
-      sheet.columns.forEach((column) => {
+      let idxAfterCpp1 = 3 + cpp1Names.length;
+
+      sheet.getCell(g, idxAfterCpp1 + 1).value = grandY4;
+      sheet.getCell(g, idxAfterCpp1 + 2).value = grandY4A;
+      sheet.getCell(g, idxAfterCpp1 + 3).value = grandY127;
+
+      let cpp3StartCol = headers.indexOf("") + 2;
+
+      cpp3Names.forEach((c, i) => {
+        sheet.getCell(g, cpp3StartCol + i).value = grandCpp3[c];
+      });
+
+      let afterCpp3 = cpp3StartCol + cpp3Names.length;
+
+      sheet.getCell(g, afterCpp3 + 1).value = grandPathA;
+      sheet.getCell(g, afterCpp3 + 2).value = grandPathB;
+
+      // ===== GRAND BORDER =====
+      sheet.getRow(g).eachCell((cell, col) => {
+        cell.font = { bold: true };
+        cell.alignment = { horizontal: "center" };
+
+        cell.border = {
+          top: { style: "double" },
+          bottom: { style: "double" },
+          left: { style: "thin" },
+          right: col === dividerCol ? { style: "thick" } : { style: "thin" },
+        };
+      });
+
+      // ===== AUTO WIDTH =====
+      sheet.columns.forEach((col) => {
         let max = 10;
-        column.eachCell({ includeEmpty: true }, (cell) => {
-          const val = cell.value ? cell.value.toString() : "";
-          max = Math.max(max, val.length + 2);
+        col.eachCell({ includeEmpty: true }, (cell) => {
+          const v = cell.value ? cell.value.toString() : "";
+          max = Math.max(max, v.length + 2);
         });
-        column.width = max > 40 ? 40 : max;
+        col.width = max;
       });
 
-      // ===== SAVE FILE =====
+      // ===== SAVE =====
       const dir = path.join(__dirname, "../excel");
       if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 
