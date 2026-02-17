@@ -466,18 +466,8 @@ module.exports = {
       return callback(error);
     }
   },
-  /*for (const date in grouped) {
-  const rows = grouped[date];
-  let startRow = rowIndex;
-*/
-  /*const cpp1Total = doc.total_reclaiming || 0;
-   */
-  /*sheet.mergeCells(`A${startRow}:A${rowIndex - 1}`);
-sheet.getCell(`A${startRow}`).alignment = {
-  vertical: "middle",
-  horizontal: "center",
-};*/
 
+  /*const dayTotalCol = 2 + cpp1Names.length + 5;*/
   reclaimingServiceExcel: async (
     fromdate,
     fromshift,
@@ -738,18 +728,18 @@ sheet.getCell(`A${startRow}`).alignment = {
           horizontal: "center",
         };
         // ===== DAY TOTAL CPP1 MERGE =====
-        const dayTotalCol = 2 + cpp1Names.length + 5;
-        // DATE+SHIFT + coal + total + y4 + y4a + y127 + cpp1total
+        const dayTotalColIndex = 2 + cpp1Names.length + 5;
 
+        // get correct excel column letter (AA, AB, AC etc supported)
+        const dayColLetter = sheet.getColumn(dayTotalColIndex).letter;
+
+        // merge A,B,C rows for that date
         sheet.mergeCells(
-          `${String.fromCharCode(64 + dayTotalCol)}${startRow}:` +
-            `${String.fromCharCode(64 + dayTotalCol)}${rowIndex - 1}`
+          `${dayColLetter}${startRow}:${dayColLetter}${rowIndex - 1}`
         );
 
-        const dayCell = sheet.getCell(
-          `${String.fromCharCode(64 + dayTotalCol)}${startRow}`
-        );
-
+        // set value once
+        const dayCell = sheet.getCell(`${dayColLetter}${startRow}`);
         dayCell.value = dayTotalCpp1 || "";
         dayCell.font = { bold: true };
         dayCell.alignment = { vertical: "middle", horizontal: "center" };
