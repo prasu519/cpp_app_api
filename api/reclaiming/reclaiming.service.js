@@ -521,7 +521,7 @@ module.exports = {
 
       const norm = (n) => (n ? n.toString().trim().toUpperCase() : "");
 
-      // ===== CPP1 dynamic columns =====
+      // ===== CPP1 dynamic =====
       let cpp1Set = new Set();
       records.forEach((doc) => {
         for (let i = 1; i <= 8; i++) {
@@ -544,7 +544,26 @@ module.exports = {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("RECLAIMING");
 
-      sheet.views = [{ state: "frozen", xSplit: 1, ySplit: 3 }];
+      // ===== PRINT SETTINGS (LANDSCAPE OFFICIAL) =====
+      sheet.pageSetup = {
+        paperSize: 9, // A4
+        orientation: "landscape",
+        fitToPage: true,
+        fitToWidth: 1,
+        fitToHeight: 1,
+        horizontalCentered: true,
+        verticalCentered: false,
+        margins: {
+          left: 0.3,
+          right: 0.3,
+          top: 0.5,
+          bottom: 0.5,
+          header: 0.2,
+          footer: 0.2,
+        },
+      };
+
+      sheet.views = [{ state: "frozen", xSplit: 2, ySplit: 3 }];
 
       // ===== TITLE =====
       const monthName = new Date(fromdate)
@@ -552,9 +571,10 @@ module.exports = {
         .toUpperCase();
 
       sheet.mergeCells("A1:Z1");
-      sheet.getCell("A1").value = `RECLAIMING SUMMARY ${monthName} MONTH`;
-      sheet.getCell("A1").font = { bold: true, size: 16 };
-      sheet.getCell("A1").alignment = { horizontal: "center" };
+      const titleCell = sheet.getCell("A1");
+      titleCell.value = `RECLAIMING SUMMARY ${monthName} MONTH`;
+      titleCell.font = { bold: true, size: 16 };
+      titleCell.alignment = { horizontal: "center", vertical: "middle" };
 
       // ===== HEADERS =====
       let headers = ["DATE", "SHIFT"];
@@ -569,17 +589,31 @@ module.exports = {
       sheet.addRow(headers);
 
       const headerRow = sheet.getRow(3);
+
+      // ===== HEADER STYLE (PERFECT ALIGNMENT) =====
       headerRow.eachCell((c) => {
-        c.font = { bold: true };
-        c.alignment = { horizontal: "center", vertical: "middle" };
+        c.font = { bold: true, size: 11 };
+        c.alignment = {
+          horizontal: "center",
+          vertical: "middle",
+          wrapText: true,
+        };
+
         c.fill = {
           type: "pattern",
           pattern: "solid",
-          fgColor: { argb: "FFD966" },
+          fgColor: { argb: "FFE7E6E6" },
+        };
+
+        c.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "medium" },
+          right: { style: "thin" },
         };
       });
 
-      // ===== GROUP BY DATE =====
+      // ===== GROUP =====
       const grouped = {};
       records.forEach((r) => {
         const d = new Date(r.date).toISOString().split("T")[0];
@@ -588,6 +622,8 @@ module.exports = {
       });
 
       let rowIndex = 4;
+      let grandCpp1 = 0;
+      let grandCpp3 = 0;
 
       for (const date in grouped) {
         const rows = grouped[date];
@@ -615,6 +651,8 @@ module.exports = {
 
           dayTotalCpp1 += cpp1Total;
           dayTotalCpp3 += cpp3Total;
+          grandCpp1 += cpp1Total;
+          grandCpp3 += cpp3Total;
 
           let row = [
             date,
@@ -625,58 +663,122 @@ module.exports = {
             doc.cc49recl || "",
             doc.cc126recl || "",
             cpp1Total,
-            "", // day total blank
+            "",
             "",
             ...cpp3Vals,
             cpp3Total,
             doc.patharecl || "",
             doc.pathbrecl || "",
             cpp3Total,
-            "", // day total blank
+            "",
           ];
 
-          sheet.addRow(row);
+          const newRow = sheet.addRow(row);
+
+          // row borders like plant sheet
+          newRow.eachCell((cell) => {
+            cell.border = {
+              top: { style: "hair" },
+              left: { style: "hair" },
+              bottom: { style: "hair" },
+              right: { style: "hair" },
+            };
+            cell.alignment = { horizontal: "center", vertical: "middle" };
+          });
+
           rowIndex++;
         }
 
-        // merge date column
+        // merge date
         sheet.mergeCells(`A${startRow}:A${rowIndex - 1}`);
         sheet.getCell(`A${startRow}`).alignment = {
           vertical: "middle",
           horizontal: "center",
         };
 
-        // ===== CPP1 DAY TOTAL =====
-        const cpp1DayColIndex = 2 + cpp1Names.length + 5;
-        const cpp1DayColLetter = sheet.getColumn(cpp1DayColIndex).letter;
+        // ===== find day total columns =====
+        let cpp1DayColIndex = null;
+        let cpp3DayColIndex = null;
+        let gapPassed = false;
 
-        sheet.mergeCells(
-          `${cpp1DayColLetter}${startRow}:${cpp1DayColLetter}${rowIndex - 1}`
-        );
+        headerRow.eachCell((cell, colNumber) => {
+          const val = cell.value;
+          if (val === "" && !gapPassed) {
+            gapPassed = true;
+            return;
+          }
+          if (val === "DAY TOTAL" && !cpp1DayColIndex) {
+            cpp1DayColIndex = colNumber;
+            return;
+          }
+          if (val === "DAY TOTAL" && gapPassed) {
+            cpp3DayColIndex = colNumber;
+          }
+        });
 
-        sheet.getCell(`${cpp1DayColLetter}${startRow}`).value = dayTotalCpp1;
-        sheet.getCell(`${cpp1DayColLetter}${startRow}`).font = { bold: true };
-        sheet.getCell(`${cpp1DayColLetter}${startRow}`).alignment = {
-          vertical: "middle",
-          horizontal: "center",
-        };
+        if (cpp1DayColIndex) {
+          const colLetter = sheet.getColumn(cpp1DayColIndex).letter;
+          sheet.mergeCells(
+            `${colLetter}${startRow}:${colLetter}${rowIndex - 1}`
+          );
+          const cell = sheet.getCell(`${colLetter}${startRow}`);
+          cell.value = dayTotalCpp1 || "";
+          cell.font = { bold: true };
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+        }
 
-        // ===== CPP3 DAY TOTAL =====
-        const cpp3DayColIndex = cpp1DayColIndex + 1 + cpp3Names.length + 4;
-
-        const cpp3DayColLetter = sheet.getColumn(cpp3DayColIndex).letter;
-
-        sheet.mergeCells(
-          `${cpp3DayColLetter}${startRow}:${cpp3DayColLetter}${rowIndex - 1}`
-        );
-
-        sheet.getCell(`${cpp3DayColLetter}${startRow}`).value = dayTotalCpp3;
-        sheet.getCell(`${cpp3DayColLetter}${startRow}`).font = { bold: true };
-        sheet.getCell(`${cpp3DayColLetter}${startRow}`).alignment = {
-          vertical: "middle",
-          horizontal: "center",
-        };
+        if (cpp3DayColIndex) {
+          const colLetter3 = sheet.getColumn(cpp3DayColIndex).letter;
+          sheet.mergeCells(
+            `${colLetter3}${startRow}:${colLetter3}${rowIndex - 1}`
+          );
+          const cell3 = sheet.getCell(`${colLetter3}${startRow}`);
+          cell3.value = dayTotalCpp3 || "";
+          cell3.font = { bold: true };
+          cell3.alignment = { vertical: "middle", horizontal: "center" };
+        }
       }
+
+      // ===== GRAND TOTAL ROW (DOUBLE BORDER OFFICIAL) =====
+      const grandRow = sheet.addRow([]);
+      const lastRowIndex = grandRow.number;
+
+      sheet.getCell(`A${lastRowIndex}`).value = "GRAND TOTAL";
+      sheet.getCell(`A${lastRowIndex}`).font = { bold: true };
+
+      headerRow.eachCell((cell, col) => {
+        const header = cell.value;
+
+        if (header === "DAY TOTAL") {
+          const colLetter = sheet.getColumn(col).letter;
+          const gcell = sheet.getCell(`${colLetter}${lastRowIndex}`);
+
+          if (!gcell.value) {
+            if (!sheet.getCell(`${colLetter}${lastRowIndex}`).value)
+              gcell.value = grandCpp1 || grandCpp3;
+          }
+
+          gcell.font = { bold: true };
+
+          // double border
+          gcell.border = {
+            top: { style: "double" },
+            bottom: { style: "double" },
+            left: { style: "double" },
+            right: { style: "double" },
+          };
+        }
+      });
+
+      // ===== AUTO COLUMN WIDTH =====
+      sheet.columns.forEach((column) => {
+        let max = 10;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const val = cell.value ? cell.value.toString() : "";
+          max = Math.max(max, val.length + 2);
+        });
+        column.width = max > 40 ? 40 : max;
+      });
 
       // ===== SAVE FILE =====
       const dir = path.join(__dirname, "../excel");
