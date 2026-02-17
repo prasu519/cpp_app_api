@@ -466,6 +466,17 @@ module.exports = {
       return callback(error);
     }
   },
+  /*for (const date in grouped) {
+  const rows = grouped[date];
+  let startRow = rowIndex;
+*/
+  /*const cpp1Total = doc.total_reclaiming || 0;
+   */
+  /*sheet.mergeCells(`A${startRow}:A${rowIndex - 1}`);
+sheet.getCell(`A${startRow}`).alignment = {
+  vertical: "middle",
+  horizontal: "center",
+};*/
 
   reclaimingServiceExcel: async (
     fromdate,
@@ -652,6 +663,7 @@ module.exports = {
       for (const date in grouped) {
         const rows = grouped[date];
         let startRow = rowIndex;
+        let dayTotalCpp1 = 0; // 🔴 ADD THIS
 
         for (let i = 0; i < rows.length; i++) {
           const doc = rows[i];
@@ -683,6 +695,7 @@ module.exports = {
 
           const cpp1Total = doc.total_reclaiming || 0;
           const cpp3Total = doc.cpp3total_reclaiming || 0;
+          dayTotalCpp1 += cpp1Total; // 🔴 ADD THIS
 
           grandCpp1 += cpp1Total;
           grandCpp3 += cpp3Total;
@@ -705,14 +718,14 @@ module.exports = {
             doc.cc49recl || "",
             doc.cc126recl || "",
             cpp1Total || "",
-            cpp1Total || "",
+            "", // 🔴 DAY TOTAL EMPTY PER SHIFT
             "",
             ...cpp3Vals,
             cpp3Total || "",
             doc.patharecl || "",
             doc.pathbrecl || "",
             cpp3Total || "",
-            cpp3Total || "",
+            "", // 🔴 CPP3 DAY TOTAL EMPTY PER SHIFT
           ];
 
           sheet.addRow(row);
@@ -724,6 +737,22 @@ module.exports = {
           vertical: "middle",
           horizontal: "center",
         };
+        // ===== DAY TOTAL CPP1 MERGE =====
+        const dayTotalCol = 2 + cpp1Names.length + 5;
+        // DATE+SHIFT + coal + total + y4 + y4a + y127 + cpp1total
+
+        sheet.mergeCells(
+          `${String.fromCharCode(64 + dayTotalCol)}${startRow}:` +
+            `${String.fromCharCode(64 + dayTotalCol)}${rowIndex - 1}`
+        );
+
+        const dayCell = sheet.getCell(
+          `${String.fromCharCode(64 + dayTotalCol)}${startRow}`
+        );
+
+        dayCell.value = dayTotalCpp1 || "";
+        dayCell.font = { bold: true };
+        dayCell.alignment = { vertical: "middle", horizontal: "center" };
       }
 
       // ===== GRAND TOTAL =====
