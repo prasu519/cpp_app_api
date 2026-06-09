@@ -1,4 +1,5 @@
 const CrusherStatus = require("../models/CrusherStatusModel");
+const CrusherDetails = require("../models/CrusherDetailsModel");
 
 module.exports = {
   crusherStatusService: async (data, callback) => {
@@ -6,6 +7,15 @@ module.exports = {
       const addCrusherStatus = new CrusherStatus(data);
       await addCrusherStatus.save();
       return callback(null, addCrusherStatus);
+    } catch (error) {
+      return callback(error);
+    }
+  },
+  crusherDetailsService: async (data, callback) => {
+    try {
+      const addCrusherDetails = new CrusherDetails(data);
+      await addCrusherDetails.save();
+      return callback(null, addCrusherDetails);
     } catch (error) {
       return callback(error);
     }

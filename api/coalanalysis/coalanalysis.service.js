@@ -220,6 +220,10 @@ module.exports = {
           $group: {
             _id: { date: "$date", shift: "$shift" },
             ciPerShift: { $avg: { $toDouble: "$ci" } },
+            ashPerShift: { $avg: { $toDouble: "$ash" } },
+            vmPerShift: { $avg: { $toDouble: "$vm" } },
+            fcPerShift: { $avg: { $toDouble: "$fc" } },
+            tmPerShift: { $avg: { $toDouble: "$tm" } },
             docsCount: { $sum: 1 },
           },
         },
@@ -231,11 +235,19 @@ module.exports = {
             countShifts: { $sum: 1 },
             sumOfShiftAverages: { $sum: "$ciPerShift" },
             avgci: { $avg: "$ciPerShift" },
+            avgash: { $avg: "$ashPerShift" },
+            avgvm: { $avg: "$vmPerShift" },
+            avgfc: { $avg: "$fcPerShift" },
+            avgtm: { $avg: "$tmPerShift" },
             samples: {
               $push: {
                 date: "$_id.date",
                 shift: "$_id.shift",
                 ciPerShift: "$ciPerShift",
+                ashPerShift: "$ashPerShift",
+                vmPerShift: "$vmPerShift",
+                fcPerShift: "$fcPerShift",
+                tmPerShift: "$tmPerShift",
                 docsCount: "$docsCount",
               },
             },
@@ -258,7 +270,7 @@ module.exports = {
         matchCondition,
       });*/
 
-      return callback(null, res[0].avgci);
+      return callback(null, res[0]);
     } catch (error) {
       console.error(error);
       return callback(error);
