@@ -87,3 +87,27 @@ app.use("/api/shiftreportenteredbylatest", shiftReportEnteredByRouterLatest);
 
 const coalNameListRouter = require("./api/coalnamelist/coalnamelist.router");
 app.use("/api/coalnamelist", coalNameListRouter);
+
+const streamRoutes = require("./api/stream/stream.router");
+app.use("/api/streams", streamRoutes);
+
+const equipmentRoutes = require("./api/equipment/equipment.router");
+app.use("/api/equipments", equipmentRoutes);
+
+const cleaningAreaRoutes = require("./api/cleaningarea/cleaningarea.router");
+app.use("/api/cleaningareas", cleaningAreaRoutes);
+
+const mechanicalAreaRoutes = require("./api/mechanicalarea/mechanicalarea.router");
+app.use("/api/mechanicalareas", mechanicalAreaRoutes);
+
+const electricalAreaRoutes = require("./api/electricalarea/electricalarea.router");
+app.use("/api/electricalareas", electricalAreaRoutes);
+
+const instrumentationAreaRoutes = require("./api/instrumentationarea/instrumentationarea.router");
+app.use("/api/instrumentationareas", instrumentationAreaRoutes);
+
+const complaintRoutes = require("./api/complaint/complaint.router");
+app.use("/api/complaints", complaintRoutes);
+
+const complaintListRoutes = require("./api/complaintslist/complaintslist.router");
+app.use("/api/complaintlist", complaintListRoutes);

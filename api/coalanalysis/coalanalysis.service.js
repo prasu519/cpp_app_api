@@ -239,18 +239,18 @@ module.exports = {
             avgvm: { $avg: "$vmPerShift" },
             avgfc: { $avg: "$fcPerShift" },
             avgtm: { $avg: "$tmPerShift" },
-            samples: {
+            /*samples: {
               $push: {
                 date: "$_id.date",
                 shift: "$_id.shift",
                 ciPerShift: "$ciPerShift",
-                ashPerShift: "$ashPerShift",
-                vmPerShift: "$vmPerShift",
-                fcPerShift: "$fcPerShift",
-                tmPerShift: "$tmPerShift",
+                 ashPerShift: "$ashPerShift",
+                 vmPerShift: "$vmPerShift",
+                 fcPerShift: "$fcPerShift",
+                 tmPerShift: "$tmPerShift",
                 docsCount: "$docsCount",
               },
-            },
+            },*/
           },
         },
       ];
