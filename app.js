@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+const path = require("path");
 
 const app = express();
 
@@ -111,3 +112,7 @@ app.use("/api/complaints", complaintRoutes);
 
 const complaintListRoutes = require("./api/complaintslist/complaintslist.router");
 app.use("/api/complaintlist", complaintListRoutes);
+
+//app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use("/api/uploads", express.static(path.join(__dirname, "api", "uploads")));

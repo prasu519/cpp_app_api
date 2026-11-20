@@ -45,6 +45,8 @@ const getComplaintList = async (status, complaintType) => {
         stream: 1,
         equipment: 1,
         area: 1,
+        image: 1,
+        voice: 1,
         status: 1,
       },
     },

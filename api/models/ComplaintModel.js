@@ -42,6 +42,30 @@ const complaintSchema = new mongoose.Schema(
       required: true,
     },
 
+    image: {
+      filename: {
+        type: String,
+      },
+      path: {
+        type: String,
+      },
+      mimetype: {
+        type: String,
+      },
+    },
+
+    voice: {
+      filename: {
+        type: String,
+      },
+      path: {
+        type: String,
+      },
+      mimetype: {
+        type: String,
+      },
+    },
+
     description: {
       type: String,
     },
